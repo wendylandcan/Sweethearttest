@@ -495,6 +495,9 @@ export default function InvitationPage({ onVerified, initialCode = "" }) {
           text-shadow: 0 0 8px rgba(180, 130, 255, 0.3);
           font-family: 'Nunito', sans-serif;
           z-index: 5;
+          text-align: center;
+          width: 90%;
+          max-width: 400px;
         }
 
         /* 移动端适配 */
@@ -522,6 +525,13 @@ export default function InvitationPage({ onVerified, initialCode = "" }) {
           .invitation-button {
             font-size: 16px;
             padding: 14px 28px;
+          }
+
+          .invitation-watermark {
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            bottom: 20px;
+            width: 85%;
           }
         }
 
