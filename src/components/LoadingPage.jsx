@@ -104,8 +104,10 @@ export default function LoadingPage({ onStart }) {
           key={`ambient-${i}`}
           style={{
             ...symbol.style,
-            WebkitTextFillColor: symbol.style.color, // 强制 WebKit 浏览器使用指定颜色
-            MozTextFillColor: symbol.style.color, // 强制 Firefox 使用指定颜色
+            WebkitTextFillColor: symbol.style.color,
+            MozTextFillColor: symbol.style.color,
+            // 使用 filter 强制去色并着色为灰紫色
+            filter: `${symbol.style.filter} grayscale(100%) brightness(1.2) sepia(20%) hue-rotate(240deg) saturate(0.3)`,
           }}
         >
           {symbol.suit}
@@ -120,13 +122,13 @@ export default function LoadingPage({ onStart }) {
         transform: 'translate(-180%, -280%)',
         fontSize: 'clamp(24px, 5vw, 32px)',
         color: 'rgba(165, 155, 175, 0.15)',
-        WebkitTextFillColor: 'rgba(165, 155, 175, 0.15)', // 强制颜色
-        MozTextFillColor: 'rgba(165, 155, 175, 0.15)', // 强制颜色
+        WebkitTextFillColor: 'rgba(165, 155, 175, 0.15)',
+        MozTextFillColor: 'rgba(165, 155, 175, 0.15)',
         pointerEvents: 'none',
         zIndex: 1,
         opacity: 0.15,
         animation: 'suitFloat1 10s ease-in-out infinite',
-        filter: 'blur(1px)',
+        filter: 'blur(1px) grayscale(100%) brightness(1.2) sepia(20%) hue-rotate(240deg) saturate(0.3)',
         textShadow: '0 0 3px currentColor'
       }}>♠</span>
 
@@ -137,13 +139,13 @@ export default function LoadingPage({ onStart }) {
         transform: 'translate(120%, 180%)',
         fontSize: 'clamp(20px, 4.5vw, 26px)',
         color: 'rgba(160, 150, 170, 0.14)',
-        WebkitTextFillColor: 'rgba(160, 150, 170, 0.14)', // 强制颜色
-        MozTextFillColor: 'rgba(160, 150, 170, 0.14)', // 强制颜色
+        WebkitTextFillColor: 'rgba(160, 150, 170, 0.14)',
+        MozTextFillColor: 'rgba(160, 150, 170, 0.14)',
         pointerEvents: 'none',
         zIndex: 1,
         opacity: 0.14,
         animation: 'suitFloat2 11s ease-in-out infinite',
-        filter: 'blur(1px)',
+        filter: 'blur(1px) grayscale(100%) brightness(1.2) sepia(20%) hue-rotate(240deg) saturate(0.3)',
         textShadow: '0 0 2.5px currentColor'
       }}>♦</span>
 
