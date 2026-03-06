@@ -107,7 +107,7 @@ html, body {
 }
 
 /* Poker suit decorations - Gemstone Ambient Pattern */
-/* 核心符号动画 */
+/* 核心符号动画 - 降低饱和度至灰紫色 */
 .loading-content::before {
   content: '♥';
   position: absolute;
@@ -115,15 +115,15 @@ html, body {
   right: -60px;
   font-size: clamp(22px, 4.8vw, 28px);
   color: transparent;
-  background: linear-gradient(135deg, rgba(180, 100, 255, 0.62) 0%, rgba(140, 80, 220, 0.46) 50%, rgba(100, 50, 200, 0.32) 100%);
+  background: linear-gradient(135deg, rgba(170, 160, 180, 0.25) 0%, rgba(150, 145, 165, 0.18) 50%, rgba(130, 125, 150, 0.12) 100%);
   -webkit-background-clip: text;
   background-clip: text;
-  filter: drop-shadow(0 0 9px rgba(196, 160, 232, 0.58)) drop-shadow(0 2px 4px rgba(155, 127, 212, 0.48));
+  filter: blur(1px) drop-shadow(0 0 4px rgba(155, 150, 165, 0.25));
   pointer-events: none;
   z-index: 1;
-  opacity: 0.36;
+  opacity: 0.15;
   animation: suitFloat2 12s ease-in-out infinite;
-  text-shadow: 0 0 8px rgba(180, 100, 255, 0.52), inset 0 0 6px rgba(160, 90, 240, 0.42);
+  text-shadow: 0 0 3px rgba(170, 165, 180, 0.2);
 }
 
 .loading-content::after {
@@ -133,15 +133,15 @@ html, body {
   left: -50px;
   font-size: clamp(24px, 5vw, 30px);
   color: transparent;
-  background: linear-gradient(135deg, rgba(180, 100, 255, 0.58) 0%, rgba(140, 80, 220, 0.44) 50%, rgba(100, 50, 200, 0.3) 100%);
+  background: linear-gradient(135deg, rgba(170, 160, 180, 0.24) 0%, rgba(150, 145, 165, 0.17) 50%, rgba(130, 125, 150, 0.11) 100%);
   -webkit-background-clip: text;
   background-clip: text;
-  filter: drop-shadow(0 0 9px rgba(139, 111, 184, 0.6)) drop-shadow(0 2px 5px rgba(107, 79, 152, 0.5));
+  filter: blur(1px) drop-shadow(0 0 3px rgba(155, 150, 165, 0.23));
   pointer-events: none;
   z-index: 1;
-  opacity: 0.33;
+  opacity: 0.14;
   animation: suitFloat3 14s ease-in-out infinite;
-  text-shadow: 0 0 8px rgba(180, 100, 255, 0.5), inset 0 0 6px rgba(160, 90, 240, 0.4);
+  text-shadow: 0 0 2.5px rgba(170, 165, 180, 0.19);
 }
 
 /* 背景环境符号层 - 移除旧的 */
@@ -158,18 +158,18 @@ html, body {
 }
 
 @keyframes suitFloat1 {
-  0%, 100% { transform: translate(-180%, -280%) rotate(0deg); opacity: 0.35; }
-  50% { transform: translate(-180%, -290%) rotate(3deg); opacity: 0.26; }
+  0%, 100% { transform: translate(-180%, -280%) rotate(0deg); opacity: 0.15; }
+  50% { transform: translate(-180%, -290%) rotate(3deg); opacity: 0.10; }
 }
 
 @keyframes suitFloat2 {
-  0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.36; }
-  50% { transform: translateY(-8px) rotate(-2deg); opacity: 0.28; }
+  0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.15; }
+  50% { transform: translateY(-8px) rotate(-2deg); opacity: 0.10; }
 }
 
 @keyframes suitFloat3 {
-  0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.33; }
-  50% { transform: translateY(-6px) rotate(2deg); opacity: 0.25; }
+  0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.14; }
+  50% { transform: translateY(-6px) rotate(2deg); opacity: 0.09; }
 }
 
 @keyframes ambientFloat1 {
