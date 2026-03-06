@@ -202,33 +202,33 @@ export default function LoadingPage({ onStart }) {
 
             {/* Hidden ornate textures for mysterious atmosphere */}
             <g clipPath="url(#eggClip)">
-              {/* Ghostly curved filigree lines */}
+              {/* Ghostly curved filigree lines - 降低饱和度 */}
               <path
                 d="M30 54 C48 42, 72 44, 89 58"
-                stroke="rgba(220, 195, 255, 0.12)"
+                stroke="rgba(170, 165, 175, 0.04)"
                 strokeWidth="0.9"
                 fill="none"
               />
               <path
                 d="M30 70 C47 60, 73 61, 90 74"
-                stroke="rgba(228, 206, 255, 0.11)"
+                stroke="rgba(168, 163, 173, 0.035)"
                 strokeWidth="0.8"
                 fill="none"
               />
               <path
                 d="M31 86 C49 76, 71 78, 88 92"
-                stroke="rgba(210, 185, 245, 0.1)"
+                stroke="rgba(165, 160, 170, 0.03)"
                 strokeWidth="0.75"
                 fill="none"
               />
               {/* Thin vertical aurora bands */}
-              <ellipse cx="52" cy="72" rx="3.8" ry="49" fill="rgba(198, 165, 240, 0.06)" />
-              <ellipse cx="69" cy="72" rx="2.6" ry="47" fill="rgba(180, 150, 225, 0.05)" />
-              {/* Faint suit sigils */}
-              <text x="41" y="64" fontSize="11" fill="rgba(235, 215, 255, 0.12)">♥</text>
-              <text x="65" y="60" fontSize="10" fill="rgba(225, 205, 250, 0.1)">♠</text>
-              <text x="43" y="87" fontSize="10" fill="rgba(220, 198, 248, 0.1)">♣</text>
-              <text x="66" y="90" fontSize="10" fill="rgba(238, 216, 255, 0.1)">♦</text>
+              <ellipse cx="52" cy="72" rx="3.8" ry="49" fill="rgba(170, 165, 175, 0.02)" />
+              <ellipse cx="69" cy="72" rx="2.6" ry="47" fill="rgba(165, 160, 170, 0.015)" />
+              {/* Faint suit sigils - 极低饱和度灰紫色 */}
+              <text x="41" y="64" fontSize="11" fill="rgba(170, 165, 175, 0.04)">♥</text>
+              <text x="65" y="60" fontSize="10" fill="rgba(165, 160, 170, 0.035)">♠</text>
+              <text x="43" y="87" fontSize="10" fill="rgba(168, 163, 173, 0.035)">♣</text>
+              <text x="66" y="90" fontSize="10" fill="rgba(172, 167, 177, 0.035)">♦</text>
             </g>
 
             {/* Primary highlight */}
