@@ -208,7 +208,7 @@ export default function LoadingPage({ onStart }) {
             <ellipse cx="60" cy="72" rx="33.5" ry="50" fill="url(#eggVeil)" />
 
             {/* Hidden ornate textures for mysterious atmosphere */}
-            <g clipPath="url(#eggClip)" style={{ filter: 'grayscale(100%) sepia(40%) hue-rotate(250deg) saturate(0.5) brightness(0.9)' }}>
+            <g clipPath="url(#eggClip)">
               {/* Ghostly curved filigree lines - 降低饱和度 */}
               <path
                 d="M30 54 C48 42, 72 44, 89 58"
@@ -231,35 +231,7 @@ export default function LoadingPage({ onStart }) {
               {/* Thin vertical aurora bands */}
               <ellipse cx="52" cy="72" rx="3.8" ry="49" fill="rgba(170, 165, 175, 0.02)" />
               <ellipse cx="69" cy="72" rx="2.6" ry="47" fill="rgba(165, 160, 170, 0.015)" />
-              {/* Faint suit sigils - 极低饱和度灰紫色，强制覆盖默认颜色 */}
-              <text
-                x="41"
-                y="64"
-                fontSize="11"
-                fill="rgba(170, 165, 175, 0.04)"
-                style={{ fill: 'rgba(170, 165, 175, 0.04)' }}
-              >♥</text>
-              <text
-                x="65"
-                y="60"
-                fontSize="10"
-                fill="rgba(165, 160, 170, 0.035)"
-                style={{ fill: 'rgba(165, 160, 170, 0.035)' }}
-              >♠</text>
-              <text
-                x="43"
-                y="87"
-                fontSize="10"
-                fill="rgba(168, 163, 173, 0.035)"
-                style={{ fill: 'rgba(168, 163, 173, 0.035)' }}
-              >♣</text>
-              <text
-                x="66"
-                y="90"
-                fontSize="10"
-                fill="rgba(172, 167, 177, 0.035)"
-                style={{ fill: 'rgba(172, 167, 177, 0.035)' }}
-              >♦</text>
+              {/* 移除扑克牌符号，避免显示默认红黑色 */}
             </g>
 
             {/* Primary highlight */}
