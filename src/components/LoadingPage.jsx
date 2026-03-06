@@ -77,6 +77,7 @@ export default function LoadingPage({ onStart }) {
 
     return {
       suit,
+      blur, // 保存 blur 值供后续使用
       style: {
         position: 'absolute',
         top: `${topPercent}%`,
@@ -88,7 +89,6 @@ export default function LoadingPage({ onStart }) {
         opacity: opacity,
         animation: `ambientFloat${(i % 3) + 1} ${18 + Math.random() * 20}s ease-in-out infinite`,
         animationDelay: `${Math.random() * 8}s`,
-        filter: `blur(${blur}px)`,
         textShadow: `0 0 ${fontSize * 0.08}px currentColor`
       }
     };
@@ -107,7 +107,7 @@ export default function LoadingPage({ onStart }) {
             WebkitTextFillColor: symbol.style.color,
             MozTextFillColor: symbol.style.color,
             // 调整 filter 参数，增加紫色调
-            filter: `${symbol.style.filter} grayscale(100%) sepia(40%) hue-rotate(250deg) saturate(0.5) brightness(0.9)`,
+            filter: `blur(${symbol.blur}px) grayscale(100%) sepia(40%) hue-rotate(250deg) saturate(0.5) brightness(0.9)`,
           }}
         >
           {symbol.suit}

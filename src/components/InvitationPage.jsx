@@ -46,6 +46,7 @@ export default function InvitationPage({ onVerified, initialCode = "" }) {
       const left = Math.random() * 100;
       const duration = Math.random() * 30 + 25; // 25-55s
       const delay = Math.random() * 20;
+      const blurAmount = Math.random() * 4 + 2; // 2-6px
 
       // 使用灰紫色，不区分红黑
       const colorTemplate = grayPurpleColors[i % 4];
@@ -53,6 +54,7 @@ export default function InvitationPage({ onVerified, initialCode = "" }) {
 
       return {
         suit,
+        blurAmount,
         style: {
           position: 'absolute',
           top: `${top}%`,
@@ -62,7 +64,6 @@ export default function InvitationPage({ onVerified, initialCode = "" }) {
           pointerEvents: 'none',
           animation: `float ${duration}s ease-in-out infinite`,
           animationDelay: `${delay}s`,
-          filter: `blur(${Math.random() * 4 + 2}px)`, // 2-6px 增加模糊
           textShadow: `0 0 ${size * 0.15}px currentColor`, // 进一步减少光晕
         }
       };
@@ -158,7 +159,7 @@ export default function InvitationPage({ onVerified, initialCode = "" }) {
             WebkitTextFillColor: symbol.style.color,
             MozTextFillColor: symbol.style.color,
             // 调整 filter 参数，增加紫色调
-            filter: `${symbol.style.filter} grayscale(100%) sepia(40%) hue-rotate(250deg) saturate(0.5) brightness(0.9)`,
+            filter: `blur(${symbol.blurAmount}px) grayscale(100%) sepia(40%) hue-rotate(250deg) saturate(0.5) brightness(0.9)`,
           }}
         >
           {symbol.suit}
