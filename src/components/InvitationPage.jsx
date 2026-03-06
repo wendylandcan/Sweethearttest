@@ -157,8 +157,8 @@ export default function InvitationPage({ onVerified, initialCode = "" }) {
             ...symbol.style,
             WebkitTextFillColor: symbol.style.color,
             MozTextFillColor: symbol.style.color,
-            // 使用 filter 强制去色并着色为灰紫色
-            filter: `${symbol.style.filter} grayscale(100%) brightness(1.2) sepia(20%) hue-rotate(240deg) saturate(0.3)`,
+            // 调整 filter 参数，增加紫色调
+            filter: `${symbol.style.filter} grayscale(100%) sepia(40%) hue-rotate(250deg) saturate(0.5) brightness(0.9)`,
           }}
         >
           {symbol.suit}

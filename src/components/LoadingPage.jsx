@@ -106,8 +106,8 @@ export default function LoadingPage({ onStart }) {
             ...symbol.style,
             WebkitTextFillColor: symbol.style.color,
             MozTextFillColor: symbol.style.color,
-            // 使用 filter 强制去色并着色为灰紫色
-            filter: `${symbol.style.filter} grayscale(100%) brightness(1.2) sepia(20%) hue-rotate(240deg) saturate(0.3)`,
+            // 调整 filter 参数，增加紫色调
+            filter: `${symbol.style.filter} grayscale(100%) sepia(40%) hue-rotate(250deg) saturate(0.5) brightness(0.9)`,
           }}
         >
           {symbol.suit}
@@ -128,7 +128,7 @@ export default function LoadingPage({ onStart }) {
         zIndex: 1,
         opacity: 0.15,
         animation: 'suitFloat1 10s ease-in-out infinite',
-        filter: 'blur(1px) grayscale(100%) brightness(1.2) sepia(20%) hue-rotate(240deg) saturate(0.3)',
+        filter: 'blur(1px) grayscale(100%) sepia(40%) hue-rotate(250deg) saturate(0.5) brightness(0.9)',
         textShadow: '0 0 3px currentColor'
       }}>♠</span>
 
@@ -145,7 +145,7 @@ export default function LoadingPage({ onStart }) {
         zIndex: 1,
         opacity: 0.14,
         animation: 'suitFloat2 11s ease-in-out infinite',
-        filter: 'blur(1px) grayscale(100%) brightness(1.2) sepia(20%) hue-rotate(240deg) saturate(0.3)',
+        filter: 'blur(1px) grayscale(100%) sepia(40%) hue-rotate(250deg) saturate(0.5) brightness(0.9)',
         textShadow: '0 0 2.5px currentColor'
       }}>♦</span>
 
@@ -208,7 +208,7 @@ export default function LoadingPage({ onStart }) {
             <ellipse cx="60" cy="72" rx="33.5" ry="50" fill="url(#eggVeil)" />
 
             {/* Hidden ornate textures for mysterious atmosphere */}
-            <g clipPath="url(#eggClip)">
+            <g clipPath="url(#eggClip)" style={{ filter: 'grayscale(100%) sepia(40%) hue-rotate(250deg) saturate(0.5) brightness(0.9)' }}>
               {/* Ghostly curved filigree lines - 降低饱和度 */}
               <path
                 d="M30 54 C48 42, 72 44, 89 58"
@@ -231,11 +231,35 @@ export default function LoadingPage({ onStart }) {
               {/* Thin vertical aurora bands */}
               <ellipse cx="52" cy="72" rx="3.8" ry="49" fill="rgba(170, 165, 175, 0.02)" />
               <ellipse cx="69" cy="72" rx="2.6" ry="47" fill="rgba(165, 160, 170, 0.015)" />
-              {/* Faint suit sigils - 极低饱和度灰紫色 */}
-              <text x="41" y="64" fontSize="11" fill="rgba(170, 165, 175, 0.04)">♥</text>
-              <text x="65" y="60" fontSize="10" fill="rgba(165, 160, 170, 0.035)">♠</text>
-              <text x="43" y="87" fontSize="10" fill="rgba(168, 163, 173, 0.035)">♣</text>
-              <text x="66" y="90" fontSize="10" fill="rgba(172, 167, 177, 0.035)">♦</text>
+              {/* Faint suit sigils - 极低饱和度灰紫色，强制覆盖默认颜色 */}
+              <text
+                x="41"
+                y="64"
+                fontSize="11"
+                fill="rgba(170, 165, 175, 0.04)"
+                style={{ fill: 'rgba(170, 165, 175, 0.04)' }}
+              >♥</text>
+              <text
+                x="65"
+                y="60"
+                fontSize="10"
+                fill="rgba(165, 160, 170, 0.035)"
+                style={{ fill: 'rgba(165, 160, 170, 0.035)' }}
+              >♠</text>
+              <text
+                x="43"
+                y="87"
+                fontSize="10"
+                fill="rgba(168, 163, 173, 0.035)"
+                style={{ fill: 'rgba(168, 163, 173, 0.035)' }}
+              >♣</text>
+              <text
+                x="66"
+                y="90"
+                fontSize="10"
+                fill="rgba(172, 167, 177, 0.035)"
+                style={{ fill: 'rgba(172, 167, 177, 0.035)' }}
+              >♦</text>
             </g>
 
             {/* Primary highlight */}
