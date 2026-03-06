@@ -30,6 +30,14 @@ export default function InvitationPage({ onVerified, initialCode = "" }) {
   // 使用 useMemo 固定扑克牌位置，避免每次输入都刷新
   const floatingSymbols = useMemo(() => {
     const suits = ['♠', '♥', '♣', '♦'];
+    // 为所有符号使用统一的灰紫色系，深浅不一
+    const grayPurpleColors = [
+      'rgba(170, 160, 180, OPACITY)', // 浅灰紫
+      'rgba(165, 155, 175, OPACITY)', // 中浅灰紫
+      'rgba(160, 150, 170, OPACITY)', // 中灰紫
+      'rgba(155, 145, 165, OPACITY)'  // 深灰紫
+    ];
+
     return Array.from({ length: 12 }, (_, i) => {
       const suit = suits[i % 4];
       const size = Math.random() * 20 + 15; // 15-35px
@@ -39,6 +47,10 @@ export default function InvitationPage({ onVerified, initialCode = "" }) {
       const duration = Math.random() * 30 + 25; // 25-55s
       const delay = Math.random() * 20;
 
+      // 使用灰紫色，不区分红黑
+      const colorTemplate = grayPurpleColors[i % 4];
+      const color = colorTemplate.replace('OPACITY', opacity.toString());
+
       return {
         suit,
         style: {
@@ -46,10 +58,7 @@ export default function InvitationPage({ onVerified, initialCode = "" }) {
           top: `${top}%`,
           left: `${left}%`,
           fontSize: `${size}px`,
-          // 进一步降低饱和度：使用更接近灰色的颜色
-          color: suit === '♥' || suit === '♦'
-            ? `rgba(180, 160, 170, ${opacity})` // 粉色系进一步降低饱和度，接近灰紫
-            : `rgba(170, 165, 180, ${opacity})`, // 紫色系进一步降低饱和度，接近灰色
+          color: color, // 直接使用灰紫色
           pointerEvents: 'none',
           animation: `float ${duration}s ease-in-out infinite`,
           animationDelay: `${delay}s`,

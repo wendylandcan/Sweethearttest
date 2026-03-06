@@ -63,11 +63,12 @@ export default function LoadingPage({ onStart }) {
     }
 
     // 紫色宝石渐变 - 降低饱和度，接近灰紫色
-    const purpleGradients = [
-      `linear-gradient(135deg, rgba(170, 160, 180, ${opacity * 1.5}) 0%, rgba(150, 145, 165, ${opacity * 1.2}) 50%, rgba(130, 125, 150, ${opacity * 0.8}) 100%)`,
-      `linear-gradient(145deg, rgba(165, 155, 175, ${opacity * 1.4}) 0%, rgba(145, 140, 160, ${opacity * 1.1}) 50%, rgba(125, 120, 145, ${opacity * 0.7}) 100%)`,
-      `linear-gradient(125deg, rgba(175, 165, 185, ${opacity * 1.6}) 0%, rgba(155, 150, 170, ${opacity * 1.3}) 50%, rgba(135, 130, 155, ${opacity * 0.9}) 100%)`,
-      `linear-gradient(155deg, rgba(168, 158, 178, ${opacity * 1.5}) 0%, rgba(148, 143, 163, ${opacity * 1.2}) 50%, rgba(128, 123, 148, ${opacity * 0.8}) 100%)`
+    // 为每个符号分配不同深浅的灰紫色
+    const grayPurpleColors = [
+      `rgba(170, 160, 180, ${opacity})`,  // 浅灰紫
+      `rgba(160, 150, 170, ${opacity})`,  // 中灰紫
+      `rgba(150, 145, 165, ${opacity})`,  // 深灰紫
+      `rgba(165, 155, 175, ${opacity})`   // 中浅灰紫
     ];
 
     // 使用百分比定位，移动端自动收缩
@@ -81,17 +82,14 @@ export default function LoadingPage({ onStart }) {
         top: `${topPercent}%`,
         left: `${leftPercent}%`,
         fontSize: `${fontSize}px`,
-        color: 'transparent',
-        background: purpleGradients[i % 4],
-        WebkitBackgroundClip: 'text',
-        backgroundClip: 'text',
-        filter: `blur(${blur}px) drop-shadow(0 0 ${fontSize * 0.1}px rgba(155, 150, 165, ${opacity * 0.8}))`,
+        color: grayPurpleColors[i % 4], // 直接使用灰紫色，不依赖 background-clip
         pointerEvents: 'none',
         zIndex: 0,
         opacity: opacity,
         animation: `ambientFloat${(i % 3) + 1} ${18 + Math.random() * 20}s ease-in-out infinite`,
         animationDelay: `${Math.random() * 8}s`,
-        textShadow: `0 0 ${fontSize * 0.08}px rgba(170, 165, 180, ${opacity * 1.2})`
+        filter: `blur(${blur}px)`,
+        textShadow: `0 0 ${fontSize * 0.08}px currentColor`
       }
     };
   });
@@ -105,23 +103,20 @@ export default function LoadingPage({ onStart }) {
         <div key={`ambient-${i}`} style={symbol.style}>{symbol.suit}</div>
       ))}
 
-      {/* 核心四个符号 - 围绕心灵之蛋 - 降低饱和度 */}
+      {/* 核心四个符号 - 围绕心灵之蛋 - 灰紫色 */}
       <div style={{
         position: 'absolute',
         top: '50%',
         left: '50%',
         transform: 'translate(-180%, -280%)',
         fontSize: 'clamp(24px, 5vw, 32px)',
-        color: 'transparent',
-        background: 'linear-gradient(135deg, rgba(170, 160, 180, 0.25) 0%, rgba(150, 145, 165, 0.18) 50%, rgba(130, 125, 150, 0.12) 100%)',
-        WebkitBackgroundClip: 'text',
-        backgroundClip: 'text',
-        filter: 'blur(1px) drop-shadow(0 0 4px rgba(155, 150, 165, 0.25))',
+        color: 'rgba(165, 155, 175, 0.15)', // 直接使用灰紫色
         pointerEvents: 'none',
         zIndex: 1,
         opacity: 0.15,
         animation: 'suitFloat1 10s ease-in-out infinite',
-        textShadow: '0 0 3px rgba(170, 165, 180, 0.2)'
+        filter: 'blur(1px)',
+        textShadow: '0 0 3px currentColor'
       }}>♠</div>
 
       <div style={{
@@ -130,16 +125,13 @@ export default function LoadingPage({ onStart }) {
         left: '50%',
         transform: 'translate(120%, 180%)',
         fontSize: 'clamp(20px, 4.5vw, 26px)',
-        color: 'transparent',
-        background: 'linear-gradient(135deg, rgba(170, 160, 180, 0.24) 0%, rgba(150, 145, 165, 0.17) 50%, rgba(130, 125, 150, 0.11) 100%)',
-        WebkitBackgroundClip: 'text',
-        backgroundClip: 'text',
-        filter: 'blur(1px) drop-shadow(0 0 3px rgba(155, 150, 165, 0.23))',
+        color: 'rgba(160, 150, 170, 0.14)', // 直接使用灰紫色
         pointerEvents: 'none',
         zIndex: 1,
         opacity: 0.14,
         animation: 'suitFloat2 11s ease-in-out infinite',
-        textShadow: '0 0 2.5px rgba(170, 165, 180, 0.19)'
+        filter: 'blur(1px)',
+        textShadow: '0 0 2.5px currentColor'
       }}>♦</div>
 
       <div className="loading-content">

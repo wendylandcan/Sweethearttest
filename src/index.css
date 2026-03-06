@@ -107,23 +107,20 @@ html, body {
 }
 
 /* Poker suit decorations - Gemstone Ambient Pattern */
-/* 核心符号动画 - 降低饱和度至灰紫色 */
+/* 核心符号动画 - 使用灰紫色 */
 .loading-content::before {
   content: '♥';
   position: absolute;
   top: -80px;
   right: -60px;
   font-size: clamp(22px, 4.8vw, 28px);
-  color: transparent;
-  background: linear-gradient(135deg, rgba(170, 160, 180, 0.25) 0%, rgba(150, 145, 165, 0.18) 50%, rgba(130, 125, 150, 0.12) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  filter: blur(1px) drop-shadow(0 0 4px rgba(155, 150, 165, 0.25));
+  color: rgba(165, 155, 175, 0.15); /* 直接使用灰紫色 */
   pointer-events: none;
   z-index: 1;
   opacity: 0.15;
   animation: suitFloat2 12s ease-in-out infinite;
-  text-shadow: 0 0 3px rgba(170, 165, 180, 0.2);
+  filter: blur(1px);
+  text-shadow: 0 0 3px currentColor;
 }
 
 .loading-content::after {
@@ -132,16 +129,13 @@ html, body {
   bottom: -70px;
   left: -50px;
   font-size: clamp(24px, 5vw, 30px);
-  color: transparent;
-  background: linear-gradient(135deg, rgba(170, 160, 180, 0.24) 0%, rgba(150, 145, 165, 0.17) 50%, rgba(130, 125, 150, 0.11) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  filter: blur(1px) drop-shadow(0 0 3px rgba(155, 150, 165, 0.23));
+  color: rgba(160, 150, 170, 0.14); /* 直接使用灰紫色 */
   pointer-events: none;
   z-index: 1;
   opacity: 0.14;
   animation: suitFloat3 14s ease-in-out infinite;
-  text-shadow: 0 0 2.5px rgba(170, 165, 180, 0.19);
+  filter: blur(1px);
+  text-shadow: 0 0 2.5px currentColor;
 }
 
 /* 背景环境符号层 - 移除旧的 */
