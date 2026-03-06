@@ -4,7 +4,6 @@ const AudioContext = createContext(null);
 
 export function AudioProvider({ children }) {
   const audioRef = useRef(null);
-  const sfxAudioRef = useRef(null); // 音效专用 Audio 实例
   const [isPlaying, setIsPlaying] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const pendingPlayRef = useRef(false);
@@ -18,11 +17,6 @@ export function AudioProvider({ children }) {
     audio.loop = true;
     audio.volume = 0; // 初始音量为 0，用于 fade-in
     audioRef.current = audio;
-
-    // 创建音效专用实例
-    const sfxAudio = new Audio();
-    sfxAudio.volume = 0.5; // 音效音量
-    sfxAudioRef.current = sfxAudio;
 
     // 监听音频事件
     const handlePlay = () => setIsPlaying(true);
@@ -83,7 +77,6 @@ export function AudioProvider({ children }) {
         clearInterval(fadeIntervalRef.current);
       }
       audio.pause();
-      sfxAudio.pause();
     };
   }, []);
 
@@ -151,6 +144,12 @@ export function AudioProvider({ children }) {
     const audio = audioRef.current;
     if (!audio || !isPlaying) return;
 
+    // 清除之前的 ducking interval
+    if (fadeIntervalRef.current) {
+      clearInterval(fadeIntervalRef.current);
+      fadeIntervalRef.current = null;
+    }
+
     isDuckingRef.current = true;
     const currentVolume = audio.volume;
     const steps = 10;
@@ -191,30 +190,25 @@ export function AudioProvider({ children }) {
     }, stepDuration);
   };
 
-  // 播放音效（带 BGM ducking）
+  // 播放音效（带 BGM ducking）- 每次创建新的 Audio 实例
   const playSFX = (src) => {
-    const sfxAudio = sfxAudioRef.current;
-    if (!sfxAudio) {
-      console.log('音效实例不存在');
-      return;
-    }
+    // 每次创建新的音效实例，避免冲突
+    const sfxAudio = new Audio(src);
+    sfxAudio.volume = 0.6;
 
     // 降低 BGM 音量
     if (isPlaying) {
-      duckBGM(0.1, 150);
+      duckBGM(0.15, 100); // 缩短 ducking 时间
     }
 
     // 设置音效结束回调
     sfxAudio.onended = () => {
       if (isPlaying) {
-        restoreBGM(300);
+        setTimeout(() => restoreBGM(200), 50); // 延迟恢复，避免冲突
       }
     };
 
     // 播放音效
-    sfxAudio.src = src;
-    sfxAudio.currentTime = 0;
-    sfxAudio.volume = 0.6; // 确保音效音量足够
     sfxAudio.play()
       .then(() => {
         console.log('音效播放成功:', src);
@@ -223,7 +217,7 @@ export function AudioProvider({ children }) {
         console.log('音效播放失败:', err);
         // 即使失败也要恢复 BGM
         if (isPlaying) {
-          restoreBGM(300);
+          setTimeout(() => restoreBGM(200), 50);
         }
       });
   };
