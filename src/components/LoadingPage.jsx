@@ -35,30 +35,30 @@ export default function LoadingPage({ onStart }) {
     setTimeout(() => setRipple(false), 600);
   };
 
-  // 生成环境底纹符号 - 增加到60个，确保种类齐全
+  // 生成环境底纹符号 - 减少到30个以提升性能
   const suits = ['♠', '♥', '♣', '♦'];
-  const ambientSymbols = Array.from({ length: 60 }, (_, i) => {
+  const ambientSymbols = Array.from({ length: 30 }, (_, i) => {
     const suit = suits[i % 4]; // 确保每种花色均匀分布
 
-    // 尺寸分级：大(15个)、中(20个)、小(25个) - 降低透明度
+    // 尺寸分级：减少层级，优化性能
     let size, fontSize, opacity, blur;
-    if (i < 15) {
+    if (i < 10) {
       // 大型：远景装饰
       size = 'large';
       fontSize = Math.random() * 25 + 40; // 40-65px
-      opacity = Math.random() * 0.02 + 0.02; // 0.02-0.04 (降低75%)
+      opacity = Math.random() * 0.02 + 0.02; // 0.02-0.04
       blur = 3; // 增加模糊
-    } else if (i < 35) {
+    } else if (i < 20) {
       // 中型：中景点缀
       size = 'medium';
       fontSize = Math.random() * 15 + 22; // 22-37px
-      opacity = Math.random() * 0.015 + 0.015; // 0.015-0.03 (降低75%)
+      opacity = Math.random() * 0.015 + 0.015; // 0.015-0.03
       blur = 2.5; // 增加模糊
     } else {
       // 小型：近景底纹
       size = 'small';
       fontSize = Math.random() * 10 + 14; // 14-24px
-      opacity = Math.random() * 0.012 + 0.012; // 0.012-0.024 (降低75%)
+      opacity = Math.random() * 0.012 + 0.012; // 0.012-0.024
       blur = 2; // 增加模糊
     }
 
@@ -98,7 +98,7 @@ export default function LoadingPage({ onStart }) {
     <div className="loading-page">
       <div className="stars" />
 
-      {/* 环境底纹符号 - 60个随机分布，种类齐全 */}
+      {/* 环境底纹符号 - 优化性能 */}
       {ambientSymbols.map((symbol, i) => (
         <span
           key={`ambient-${i}`}
@@ -106,8 +106,8 @@ export default function LoadingPage({ onStart }) {
             ...symbol.style,
             WebkitTextFillColor: symbol.style.color,
             MozTextFillColor: symbol.style.color,
-            // 调整 filter 参数，增加紫色调
-            filter: `blur(${symbol.blur}px) grayscale(100%) sepia(40%) hue-rotate(250deg) saturate(0.5) brightness(0.9)`,
+            // 简化 filter，只保留模糊
+            filter: `blur(${symbol.blur}px)`,
           }}
         >
           {symbol.suit}

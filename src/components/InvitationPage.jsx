@@ -158,8 +158,8 @@ export default function InvitationPage({ onVerified, initialCode = "" }) {
             ...symbol.style,
             WebkitTextFillColor: symbol.style.color,
             MozTextFillColor: symbol.style.color,
-            // 调整 filter 参数，增加紫色调
-            filter: `blur(${symbol.blurAmount}px) grayscale(100%) sepia(40%) hue-rotate(250deg) saturate(0.5) brightness(0.9)`,
+            // 简化 filter，只保留模糊
+            filter: `blur(${symbol.blurAmount}px)`,
           }}
         >
           {symbol.suit}
