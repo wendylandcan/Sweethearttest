@@ -100,39 +100,52 @@ export default function LoadingPage({ onStart }) {
 
       {/* 环境底纹符号 - 60个随机分布，种类齐全 */}
       {ambientSymbols.map((symbol, i) => (
-        <div key={`ambient-${i}`} style={symbol.style}>{symbol.suit}</div>
+        <span
+          key={`ambient-${i}`}
+          style={{
+            ...symbol.style,
+            WebkitTextFillColor: symbol.style.color, // 强制 WebKit 浏览器使用指定颜色
+            MozTextFillColor: symbol.style.color, // 强制 Firefox 使用指定颜色
+          }}
+        >
+          {symbol.suit}
+        </span>
       ))}
 
       {/* 核心四个符号 - 围绕心灵之蛋 - 灰紫色 */}
-      <div style={{
+      <span style={{
         position: 'absolute',
         top: '50%',
         left: '50%',
         transform: 'translate(-180%, -280%)',
         fontSize: 'clamp(24px, 5vw, 32px)',
-        color: 'rgba(165, 155, 175, 0.15)', // 直接使用灰紫色
+        color: 'rgba(165, 155, 175, 0.15)',
+        WebkitTextFillColor: 'rgba(165, 155, 175, 0.15)', // 强制颜色
+        MozTextFillColor: 'rgba(165, 155, 175, 0.15)', // 强制颜色
         pointerEvents: 'none',
         zIndex: 1,
         opacity: 0.15,
         animation: 'suitFloat1 10s ease-in-out infinite',
         filter: 'blur(1px)',
         textShadow: '0 0 3px currentColor'
-      }}>♠</div>
+      }}>♠</span>
 
-      <div style={{
+      <span style={{
         position: 'absolute',
         top: '50%',
         left: '50%',
         transform: 'translate(120%, 180%)',
         fontSize: 'clamp(20px, 4.5vw, 26px)',
-        color: 'rgba(160, 150, 170, 0.14)', // 直接使用灰紫色
+        color: 'rgba(160, 150, 170, 0.14)',
+        WebkitTextFillColor: 'rgba(160, 150, 170, 0.14)', // 强制颜色
+        MozTextFillColor: 'rgba(160, 150, 170, 0.14)', // 强制颜色
         pointerEvents: 'none',
         zIndex: 1,
         opacity: 0.14,
         animation: 'suitFloat2 11s ease-in-out infinite',
         filter: 'blur(1px)',
         textShadow: '0 0 2.5px currentColor'
-      }}>♦</div>
+      }}>♦</span>
 
       <div className="loading-content">
         <p className="loading-subtitle-en">Seiyo Academy</p>

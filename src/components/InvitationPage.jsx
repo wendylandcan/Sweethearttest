@@ -151,7 +151,16 @@ export default function InvitationPage({ onVerified, initialCode = "" }) {
 
       {/* 浮动扑克牌花纹 - 使用 useMemo 固定位置 */}
       {floatingSymbols.map((symbol, i) => (
-        <div key={i} style={symbol.style}>{symbol.suit}</div>
+        <span
+          key={i}
+          style={{
+            ...symbol.style,
+            WebkitTextFillColor: symbol.style.color, // 强制 WebKit 浏览器使用指定颜色
+            MozTextFillColor: symbol.style.color, // 强制 Firefox 使用指定颜色
+          }}
+        >
+          {symbol.suit}
+        </span>
       ))}
 
       {/* 主容器 */}
