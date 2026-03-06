@@ -17,6 +17,11 @@ export default function QuizPage({ onComplete }) {
   const [hasAnsweredFirstHighPressure, setHasAnsweredFirstHighPressure] = useState(false);
   const { playSFX } = useAudio(); // 获取音效播放方法
 
+  // 强制应用可爱字体到整个页面
+  useEffect(() => {
+    document.body.style.fontFamily = "'ZCOOL KuaiLe', 'Fredoka', 'Quicksand', 'Noto Sans SC', sans-serif";
+  }, []);
+
   const current = QUESTIONS[currentIdx];
   const isHighPressure = current?.isHighPressure;
   const progress = currentIdx / QUESTIONS.length;

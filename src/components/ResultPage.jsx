@@ -196,6 +196,11 @@ export default function ResultPage({ match, scores, onRetry }) {
     resultAudio.play().catch(err => console.log('音频播放失败:', err));
   }, []);
 
+  // 强制应用可爱字体到整个页面
+  useEffect(() => {
+    document.body.style.fontFamily = "'ZCOOL KuaiLe', 'Fredoka', 'Quicksand', 'Noto Sans SC', sans-serif";
+  }, []);
+
   // 模态框显示时锁定滚动
   useEffect(() => {
     if (showModal) {

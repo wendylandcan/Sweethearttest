@@ -22,6 +22,11 @@ export default function InvitationPage({ onVerified, initialCode = "" }) {
     inputRef.current?.focus();
   }, []);
 
+  // 强制应用可爱字体到整个页面
+  useEffect(() => {
+    document.body.style.fontFamily = "'ZCOOL KuaiLe', 'Fredoka', 'Quicksand', 'Noto Sans SC', sans-serif";
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 

@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import InvitationPage from "./components/InvitationPage";
 import LoadingPage from "./components/LoadingPage";
 import QuizPage from "./components/QuizPage";
@@ -17,6 +17,11 @@ export default function App() {
   const [phase, setPhase] = useState("invitation"); // invitation | loading | quiz | result
   const [result, setResult] = useState(null);
   const [savedPasscode, setSavedPasscode] = useState(""); // 保存用户输入的邀请码
+
+  // 全局强制应用可爱字体
+  useEffect(() => {
+    document.body.style.fontFamily = "'ZCOOL KuaiLe', 'Fredoka', 'Quicksand', 'Noto Sans SC', sans-serif";
+  }, []);
 
   const handleVerified = useCallback((passcode) => {
     setSavedPasscode(passcode); // 保存邀请码
