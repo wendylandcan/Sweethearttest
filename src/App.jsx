@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import InvitationPage from "./components/InvitationPage";
 import LoadingPage from "./components/LoadingPage";
+import PreloadingPage from "./components/PreloadingPage";
 import QuizPage from "./components/QuizPage";
 import ResultPage from "./components/ResultPage";
 import BackgroundMusic from "./components/BackgroundMusic";
@@ -14,7 +15,7 @@ const pageVariants = {
 };
 
 export default function App() {
-  const [phase, setPhase] = useState("invitation"); // invitation | loading | quiz | result
+  const [phase, setPhase] = useState("invitation"); // invitation | loading | preloading | quiz | result
   const [result, setResult] = useState(null);
   const [savedPasscode, setSavedPasscode] = useState(""); // 保存用户输入的邀请码
 
@@ -28,7 +29,9 @@ export default function App() {
     setPhase("loading");
   }, []);
 
-  const handleStart = useCallback(() => setPhase("quiz"), []);
+  const handleStart = useCallback(() => setPhase("preloading"), []);
+
+  const handlePreloadComplete = useCallback(() => setPhase("quiz"), []);
 
   const handleComplete = useCallback(({ scores, match }) => {
     setResult({ scores, match });
@@ -55,6 +58,11 @@ export default function App() {
           {phase === "loading" && (
             <motion.div key="loading" {...pageVariants} className="page-wrapper">
               <LoadingPage onStart={handleStart} />
+            </motion.div>
+          )}
+          {phase === "preloading" && (
+            <motion.div key="preloading" {...pageVariants} className="page-wrapper">
+              <PreloadingPage onComplete={handlePreloadComplete} />
             </motion.div>
           )}
           {phase === "quiz" && (
