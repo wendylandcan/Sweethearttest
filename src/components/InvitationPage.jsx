@@ -243,7 +243,7 @@ export default function InvitationPage({ onVerified, initialCode = "" }) {
           align-items: center;
           justify-content: center;
           overflow: hidden;
-          font-family: 'ZCOOL KuaiLe', 'Noto Serif SC', serif;
+          font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Quicksand', 'Noto Sans SC', sans-serif;
         }
 
         .invitation-bg {
@@ -356,7 +356,7 @@ export default function InvitationPage({ onVerified, initialCode = "" }) {
           border-radius: 16px;
           outline: none;
           transition: all 0.3s ease;
-          font-family: 'Courier New', monospace;
+          font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Quicksand', sans-serif;
         }
 
         .invitation-input:disabled {
@@ -393,7 +393,7 @@ export default function InvitationPage({ onVerified, initialCode = "" }) {
           cursor: pointer;
           overflow: hidden;
           transition: all 0.4s ease;
-          font-family: 'ZCOOL KuaiLe', sans-serif;
+          font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Quicksand', sans-serif;
         }
 
         .invitation-button:disabled {
@@ -493,7 +493,7 @@ export default function InvitationPage({ onVerified, initialCode = "" }) {
           letter-spacing: 0.15em;
           color: rgba(180, 150, 200, 0.4);
           text-shadow: 0 0 8px rgba(180, 130, 255, 0.3);
-          font-family: 'Nunito', sans-serif;
+          font-family: 'Fredoka', 'Quicksand', 'Nunito', sans-serif;
           z-index: 5;
           text-align: center;
           width: 90%;
