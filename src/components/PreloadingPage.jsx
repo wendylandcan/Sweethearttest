@@ -4,7 +4,7 @@ import { QUESTIONS } from "../data/questions";
 
 export default function PreloadingPage({ onComplete }) {
   const [progress, setProgress] = useState(0);
-  const [loadingText, setLoadingText] = useState("请稍后，考官正在布置考场中");
+  const [loadingText, setLoadingText] = useState("同学请稍后，考官正在布置考场中");
 
   // 生成浮动扑克牌 - 与其他页面风格一致
   const floatingSymbols = useMemo(() => {
@@ -111,7 +111,7 @@ export default function PreloadingPage({ onComplete }) {
 
         // 更新加载文本
         if (currentStep < 30) {
-          setLoadingText("请稍后，考官正在布置考场中");
+          setLoadingText("同学请稍后，考官正在布置考场中");
         } else if (currentStep < 60) {
           setLoadingText("正在准备考题");
         } else if (currentStep < 90) {

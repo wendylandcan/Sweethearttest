@@ -26,12 +26,12 @@ export default function App() {
 
   const handleVerified = useCallback((passcode) => {
     setSavedPasscode(passcode); // 保存邀请码
-    setPhase("loading");
+    setPhase("preloading");
   }, []);
 
-  const handleStart = useCallback(() => setPhase("preloading"), []);
+  const handleStart = useCallback(() => setPhase("quiz"), []);
 
-  const handlePreloadComplete = useCallback(() => setPhase("quiz"), []);
+  const handlePreloadComplete = useCallback(() => setPhase("loading"), []);
 
   const handleComplete = useCallback(({ scores, match }) => {
     setResult({ scores, match });
@@ -55,14 +55,14 @@ export default function App() {
               <InvitationPage onVerified={handleVerified} initialCode={savedPasscode} />
             </motion.div>
           )}
-          {phase === "loading" && (
-            <motion.div key="loading" {...pageVariants} className="page-wrapper">
-              <LoadingPage onStart={handleStart} />
-            </motion.div>
-          )}
           {phase === "preloading" && (
             <motion.div key="preloading" {...pageVariants} className="page-wrapper">
               <PreloadingPage onComplete={handlePreloadComplete} />
+            </motion.div>
+          )}
+          {phase === "loading" && (
+            <motion.div key="loading" {...pageVariants} className="page-wrapper">
+              <LoadingPage onStart={handleStart} />
             </motion.div>
           )}
           {phase === "quiz" && (
