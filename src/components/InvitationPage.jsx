@@ -97,16 +97,16 @@ export default function InvitationPage({ onVerified, initialCode = "" }) {
     setCode(e.target.value.toUpperCase());
   };
 
-  // 生成浮动扑克牌花纹
+  // 生成浮动扑克牌花纹 - 优化：降低密度和饱和度
   const suits = ['♠', '♥', '♣', '♦'];
-  const floatingSymbols = Array.from({ length: 40 }, (_, i) => {
+  const floatingSymbols = Array.from({ length: 20 }, (_, i) => { // 从 40 减少到 20
     const suit = suits[i % 4];
-    const size = Math.random() * 30 + 20; // 20-50px
-    const opacity = Math.random() * 0.08 + 0.04; // 0.04-0.12
+    const size = Math.random() * 25 + 18; // 18-43px (稍微减小)
+    const opacity = Math.random() * 0.05 + 0.02; // 0.02-0.07 (降低透明度)
     const top = Math.random() * 100;
     const left = Math.random() * 100;
-    const duration = Math.random() * 20 + 15; // 15-35s
-    const delay = Math.random() * 10;
+    const duration = Math.random() * 25 + 20; // 20-45s (减慢速度)
+    const delay = Math.random() * 15;
 
     return {
       suit,
@@ -115,12 +115,15 @@ export default function InvitationPage({ onVerified, initialCode = "" }) {
         top: `${top}%`,
         left: `${left}%`,
         fontSize: `${size}px`,
-        color: suit === '♥' || suit === '♦' ? 'rgba(255, 100, 150, ' + opacity + ')' : 'rgba(200, 180, 255, ' + opacity + ')',
+        // 降低饱和度：使用更柔和的颜色
+        color: suit === '♥' || suit === '♦'
+          ? `rgba(200, 150, 180, ${opacity})` // 粉色系降低饱和度
+          : `rgba(180, 170, 200, ${opacity})`, // 紫色系降低饱和度
         pointerEvents: 'none',
         animation: `float ${duration}s ease-in-out infinite`,
         animationDelay: `${delay}s`,
-        filter: `blur(${Math.random() * 2}px)`,
-        textShadow: `0 0 ${size * 0.3}px currentColor`,
+        filter: `blur(${Math.random() * 3 + 1}px)`, // 增加模糊
+        textShadow: `0 0 ${size * 0.2}px currentColor`, // 减少光晕
       }
     };
   });
@@ -304,11 +307,11 @@ export default function InvitationPage({ onVerified, initialCode = "" }) {
         @keyframes float {
           0%, 100% {
             transform: translateY(0) rotate(0deg);
-            opacity: 0.4;
+            opacity: 0.3;
           }
           50% {
-            transform: translateY(-30px) rotate(180deg);
-            opacity: 0.8;
+            transform: translateY(-20px) rotate(90deg);
+            opacity: 0.6;
           }
         }
 
