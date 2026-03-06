@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#0a0a0f" />
+    <meta name="description" content="圣夜学园 · 心灵之蛋性格测验 — 遇见属于你的守护甜心" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="心灵之蛋性格测验" />
+    <meta property="og:description" content="32 道沉浸式问题 · 六维性格向量算法 · 遇见属于你的守护甜心" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="__VITE_SITE_URL__" />
+    <link rel="canonical" href="__VITE_SITE_URL__" />
+
+    <!-- iOS WebApp -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <link rel="icon" type="image/svg+xml" href="/egg-icon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=ZCOOL+KuaiLe&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <title>心灵之蛋 · 圣夜学园</title>
+  </head>
+  <body>
+    <!-- SVG 滤镜：手绘边框效果 -->
+    <svg width="0" height="0" style="position: absolute;">
+      <defs>
+        <filter id="roughen">
+          <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" result="noise" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="2" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+        <filter id="handdrawn">
+          <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="1" result="noise" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.5" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+      </defs>
+    </svg>
+
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
