@@ -114,40 +114,7 @@ export default function LoadingPage({ onStart }) {
         </span>
       ))}
 
-      {/* 核心四个符号 - 围绕心灵之蛋 - 灰紫色 */}
-      <span style={{
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-180%, -280%)',
-        fontSize: 'clamp(24px, 5vw, 32px)',
-        color: 'rgba(165, 155, 175, 0.15)',
-        WebkitTextFillColor: 'rgba(165, 155, 175, 0.15)',
-        MozTextFillColor: 'rgba(165, 155, 175, 0.15)',
-        pointerEvents: 'none',
-        zIndex: 1,
-        opacity: 0.15,
-        animation: 'suitFloat1 10s ease-in-out infinite',
-        filter: 'blur(1px) grayscale(100%) sepia(40%) hue-rotate(250deg) saturate(0.5) brightness(0.9)',
-        textShadow: '0 0 3px currentColor'
-      }}>♠</span>
-
-      <span style={{
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(120%, 180%)',
-        fontSize: 'clamp(20px, 4.5vw, 26px)',
-        color: 'rgba(160, 150, 170, 0.14)',
-        WebkitTextFillColor: 'rgba(160, 150, 170, 0.14)',
-        MozTextFillColor: 'rgba(160, 150, 170, 0.14)',
-        pointerEvents: 'none',
-        zIndex: 1,
-        opacity: 0.14,
-        animation: 'suitFloat2 11s ease-in-out infinite',
-        filter: 'blur(1px) grayscale(100%) sepia(40%) hue-rotate(250deg) saturate(0.5) brightness(0.9)',
-        textShadow: '0 0 2.5px currentColor'
-      }}>♦</span>
+      {/* 核心四个符号 - 移除以避免显示红黑色 */}
 
       <div className="loading-content">
         <p className="loading-subtitle-en">Seiyo Academy</p>

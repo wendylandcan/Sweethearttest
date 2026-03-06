@@ -107,37 +107,15 @@ html, body {
 }
 
 /* Poker suit decorations - Gemstone Ambient Pattern */
-/* 核心符号动画 - 使用灰紫色，强制覆盖默认颜色 */
+/* 核心符号动画 - 移除以避免显示红黑色 */
 .loading-content::before {
-  content: '♥';
-  position: absolute;
-  top: -80px;
-  right: -60px;
-  font-size: clamp(22px, 4.8vw, 28px);
-  color: rgba(165, 155, 175, 0.15) !important;
-  -webkit-text-fill-color: rgba(165, 155, 175, 0.15) !important;
-  pointer-events: none;
-  z-index: 1;
-  opacity: 0.15;
-  animation: suitFloat2 12s ease-in-out infinite;
-  filter: blur(1px) grayscale(100%) sepia(40%) hue-rotate(250deg) saturate(0.5) brightness(0.9);
-  text-shadow: 0 0 3px rgba(165, 155, 175, 0.15);
+  content: '';
+  display: none;
 }
 
 .loading-content::after {
-  content: '♣';
-  position: absolute;
-  bottom: -70px;
-  left: -50px;
-  font-size: clamp(24px, 5vw, 30px);
-  color: rgba(160, 150, 170, 0.14) !important;
-  -webkit-text-fill-color: rgba(160, 150, 170, 0.14) !important;
-  pointer-events: none;
-  z-index: 1;
-  opacity: 0.14;
-  animation: suitFloat3 14s ease-in-out infinite;
-  filter: blur(1px) grayscale(100%) sepia(40%) hue-rotate(250deg) saturate(0.5) brightness(0.9);
-  text-shadow: 0 0 2.5px rgba(160, 150, 170, 0.14);
+  content: '';
+  display: none;
 }
 
 /* 背景环境符号层 - 移除旧的 */
