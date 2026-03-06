@@ -40,34 +40,34 @@ export default function LoadingPage({ onStart }) {
   const ambientSymbols = Array.from({ length: 60 }, (_, i) => {
     const suit = suits[i % 4]; // 确保每种花色均匀分布
 
-    // 尺寸分级：大(15个)、中(20个)、小(25个)
+    // 尺寸分级：大(15个)、中(20个)、小(25个) - 降低透明度
     let size, fontSize, opacity, blur;
     if (i < 15) {
       // 大型：远景装饰
       size = 'large';
       fontSize = Math.random() * 25 + 40; // 40-65px
-      opacity = Math.random() * 0.08 + 0.08; // 0.08-0.16
-      blur = 1.5;
+      opacity = Math.random() * 0.02 + 0.02; // 0.02-0.04 (降低75%)
+      blur = 3; // 增加模糊
     } else if (i < 35) {
       // 中型：中景点缀
       size = 'medium';
       fontSize = Math.random() * 15 + 22; // 22-37px
-      opacity = Math.random() * 0.06 + 0.06; // 0.06-0.12
-      blur = 1;
+      opacity = Math.random() * 0.015 + 0.015; // 0.015-0.03 (降低75%)
+      blur = 2.5; // 增加模糊
     } else {
       // 小型：近景底纹
       size = 'small';
       fontSize = Math.random() * 10 + 14; // 14-24px
-      opacity = Math.random() * 0.05 + 0.05; // 0.05-0.10
-      blur = 0.5;
+      opacity = Math.random() * 0.012 + 0.012; // 0.012-0.024 (降低75%)
+      blur = 2; // 增加模糊
     }
 
-    // 紫色宝石渐变 - 多种变化
+    // 紫色宝石渐变 - 降低饱和度，接近灰紫色
     const purpleGradients = [
-      `linear-gradient(135deg, rgba(180, 100, 255, ${opacity * 2.5}) 0%, rgba(140, 80, 220, ${opacity * 1.8}) 50%, rgba(100, 50, 200, ${opacity * 1.2}) 100%)`,
-      `linear-gradient(145deg, rgba(160, 90, 240, ${opacity * 2.3}) 0%, rgba(120, 70, 200, ${opacity * 1.6}) 50%, rgba(90, 45, 180, ${opacity * 1.1}) 100%)`,
-      `linear-gradient(125deg, rgba(190, 110, 255, ${opacity * 2.6}) 0%, rgba(150, 85, 230, ${opacity * 1.9}) 50%, rgba(110, 55, 210, ${opacity * 1.3}) 100%)`,
-      `linear-gradient(155deg, rgba(170, 95, 245, ${opacity * 2.4}) 0%, rgba(130, 75, 215, ${opacity * 1.7}) 50%, rgba(95, 50, 190, ${opacity * 1.2}) 100%)`
+      `linear-gradient(135deg, rgba(170, 160, 180, ${opacity * 1.5}) 0%, rgba(150, 145, 165, ${opacity * 1.2}) 50%, rgba(130, 125, 150, ${opacity * 0.8}) 100%)`,
+      `linear-gradient(145deg, rgba(165, 155, 175, ${opacity * 1.4}) 0%, rgba(145, 140, 160, ${opacity * 1.1}) 50%, rgba(125, 120, 145, ${opacity * 0.7}) 100%)`,
+      `linear-gradient(125deg, rgba(175, 165, 185, ${opacity * 1.6}) 0%, rgba(155, 150, 170, ${opacity * 1.3}) 50%, rgba(135, 130, 155, ${opacity * 0.9}) 100%)`,
+      `linear-gradient(155deg, rgba(168, 158, 178, ${opacity * 1.5}) 0%, rgba(148, 143, 163, ${opacity * 1.2}) 50%, rgba(128, 123, 148, ${opacity * 0.8}) 100%)`
     ];
 
     // 使用百分比定位，移动端自动收缩
@@ -85,13 +85,13 @@ export default function LoadingPage({ onStart }) {
         background: purpleGradients[i % 4],
         WebkitBackgroundClip: 'text',
         backgroundClip: 'text',
-        filter: `blur(${blur}px) drop-shadow(0 0 ${fontSize * 0.25}px rgba(155, 127, 212, ${opacity * 1.8}))`,
+        filter: `blur(${blur}px) drop-shadow(0 0 ${fontSize * 0.1}px rgba(155, 150, 165, ${opacity * 0.8}))`,
         pointerEvents: 'none',
         zIndex: 0,
         opacity: opacity,
         animation: `ambientFloat${(i % 3) + 1} ${18 + Math.random() * 20}s ease-in-out infinite`,
         animationDelay: `${Math.random() * 8}s`,
-        textShadow: `0 0 ${fontSize * 0.2}px rgba(180, 100, 255, ${opacity * 2}), inset 0 0 ${fontSize * 0.15}px rgba(160, 90, 240, ${opacity * 1.5})`
+        textShadow: `0 0 ${fontSize * 0.08}px rgba(170, 165, 180, ${opacity * 1.2})`
       }
     };
   });
@@ -105,7 +105,7 @@ export default function LoadingPage({ onStart }) {
         <div key={`ambient-${i}`} style={symbol.style}>{symbol.suit}</div>
       ))}
 
-      {/* 核心四个符号 - 围绕心灵之蛋 - 紫色宝石版 */}
+      {/* 核心四个符号 - 围绕心灵之蛋 - 降低饱和度 */}
       <div style={{
         position: 'absolute',
         top: '50%',
@@ -113,15 +113,15 @@ export default function LoadingPage({ onStart }) {
         transform: 'translate(-180%, -280%)',
         fontSize: 'clamp(24px, 5vw, 32px)',
         color: 'transparent',
-        background: 'linear-gradient(135deg, rgba(180, 100, 255, 0.6) 0%, rgba(140, 80, 220, 0.45) 50%, rgba(100, 50, 200, 0.3) 100%)',
+        background: 'linear-gradient(135deg, rgba(170, 160, 180, 0.25) 0%, rgba(150, 145, 165, 0.18) 50%, rgba(130, 125, 150, 0.12) 100%)',
         WebkitBackgroundClip: 'text',
         backgroundClip: 'text',
-        filter: 'drop-shadow(0 0 10px rgba(155, 127, 212, 0.6)) drop-shadow(0 2px 5px rgba(107, 70, 168, 0.5))',
+        filter: 'blur(1px) drop-shadow(0 0 4px rgba(155, 150, 165, 0.25))',
         pointerEvents: 'none',
         zIndex: 1,
-        opacity: 0.35,
+        opacity: 0.15,
         animation: 'suitFloat1 10s ease-in-out infinite',
-        textShadow: '0 0 8px rgba(180, 100, 255, 0.5), inset 0 0 6px rgba(160, 90, 240, 0.4)'
+        textShadow: '0 0 3px rgba(170, 165, 180, 0.2)'
       }}>♠</div>
 
       <div style={{
@@ -131,15 +131,15 @@ export default function LoadingPage({ onStart }) {
         transform: 'translate(120%, 180%)',
         fontSize: 'clamp(20px, 4.5vw, 26px)',
         color: 'transparent',
-        background: 'linear-gradient(135deg, rgba(180, 100, 255, 0.58) 0%, rgba(140, 80, 220, 0.42) 50%, rgba(100, 50, 200, 0.28) 100%)',
+        background: 'linear-gradient(135deg, rgba(170, 160, 180, 0.24) 0%, rgba(150, 145, 165, 0.17) 50%, rgba(130, 125, 150, 0.11) 100%)',
         WebkitBackgroundClip: 'text',
         backgroundClip: 'text',
-        filter: 'drop-shadow(0 0 8px rgba(155, 127, 212, 0.55)) drop-shadow(0 2px 4px rgba(123, 95, 184, 0.45))',
+        filter: 'blur(1px) drop-shadow(0 0 3px rgba(155, 150, 165, 0.23))',
         pointerEvents: 'none',
         zIndex: 1,
-        opacity: 0.32,
+        opacity: 0.14,
         animation: 'suitFloat2 11s ease-in-out infinite',
-        textShadow: '0 0 7px rgba(180, 100, 255, 0.48), inset 0 0 5px rgba(160, 90, 240, 0.38)'
+        textShadow: '0 0 2.5px rgba(170, 165, 180, 0.19)'
       }}>♦</div>
 
       <div className="loading-content">

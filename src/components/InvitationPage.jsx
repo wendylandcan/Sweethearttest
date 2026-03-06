@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { validatePasscode } from "../lib/supabase";
 import { useAudio } from "../contexts/AudioContext";
@@ -26,6 +26,39 @@ export default function InvitationPage({ onVerified, initialCode = "" }) {
   useEffect(() => {
     document.body.style.fontFamily = "'ZCOOL KuaiLe', 'Fredoka', 'Quicksand', 'Noto Sans SC', sans-serif";
   }, []);
+
+  // 使用 useMemo 固定扑克牌位置，避免每次输入都刷新
+  const floatingSymbols = useMemo(() => {
+    const suits = ['♠', '♥', '♣', '♦'];
+    return Array.from({ length: 12 }, (_, i) => {
+      const suit = suits[i % 4];
+      const size = Math.random() * 20 + 15; // 15-35px
+      const opacity = Math.random() * 0.03 + 0.01; // 0.01-0.04
+      const top = Math.random() * 100;
+      const left = Math.random() * 100;
+      const duration = Math.random() * 30 + 25; // 25-55s
+      const delay = Math.random() * 20;
+
+      return {
+        suit,
+        style: {
+          position: 'absolute',
+          top: `${top}%`,
+          left: `${left}%`,
+          fontSize: `${size}px`,
+          // 进一步降低饱和度：使用更接近灰色的颜色
+          color: suit === '♥' || suit === '♦'
+            ? `rgba(180, 160, 170, ${opacity})` // 粉色系进一步降低饱和度，接近灰紫
+            : `rgba(170, 165, 180, ${opacity})`, // 紫色系进一步降低饱和度，接近灰色
+          pointerEvents: 'none',
+          animation: `float ${duration}s ease-in-out infinite`,
+          animationDelay: `${delay}s`,
+          filter: `blur(${Math.random() * 4 + 2}px)`, // 2-6px 增加模糊
+          textShadow: `0 0 ${size * 0.15}px currentColor`, // 进一步减少光晕
+        }
+      };
+    });
+  }, []); // 空依赖数组，只在组件挂载时计算一次
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -102,43 +135,12 @@ export default function InvitationPage({ onVerified, initialCode = "" }) {
     setCode(e.target.value.toUpperCase());
   };
 
-  // 生成浮动扑克牌花纹 - 进一步优化：更低密度和饱和度
-  const suits = ['♠', '♥', '♣', '♦'];
-  const floatingSymbols = Array.from({ length: 12 }, (_, i) => { // 从 20 减少到 12
-    const suit = suits[i % 4];
-    const size = Math.random() * 20 + 15; // 15-35px (进一步减小)
-    const opacity = Math.random() * 0.03 + 0.01; // 0.01-0.04 (进一步降低透明度)
-    const top = Math.random() * 100;
-    const left = Math.random() * 100;
-    const duration = Math.random() * 30 + 25; // 25-55s (更慢)
-    const delay = Math.random() * 20;
-
-    return {
-      suit,
-      style: {
-        position: 'absolute',
-        top: `${top}%`,
-        left: `${left}%`,
-        fontSize: `${size}px`,
-        // 进一步降低饱和度：使用更接近灰色的颜色
-        color: suit === '♥' || suit === '♦'
-          ? `rgba(180, 160, 170, ${opacity})` // 粉色系进一步降低饱和度，接近灰紫
-          : `rgba(170, 165, 180, ${opacity})`, // 紫色系进一步降低饱和度，接近灰色
-        pointerEvents: 'none',
-        animation: `float ${duration}s ease-in-out infinite`,
-        animationDelay: `${delay}s`,
-        filter: `blur(${Math.random() * 4 + 2}px)`, // 2-6px 增加模糊
-        textShadow: `0 0 ${size * 0.15}px currentColor`, // 进一步减少光晕
-      }
-    };
-  });
-
   return (
     <div className="invitation-page">
       {/* 背景渐变 */}
       <div className="invitation-bg" />
 
-      {/* 浮动扑克牌花纹 */}
+      {/* 浮动扑克牌花纹 - 使用 useMemo 固定位置 */}
       {floatingSymbols.map((symbol, i) => (
         <div key={i} style={symbol.style}>{symbol.suit}</div>
       ))}
