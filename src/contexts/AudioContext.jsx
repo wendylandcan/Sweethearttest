@@ -34,6 +34,22 @@ export function AudioProvider({ children }) {
       'stress': '/stress-sound.wav'
     };
 
+    // ✅ 清理旧的音效池（如果存在）
+    Object.values(sfxPoolRef.current).forEach(pool => {
+      pool.forEach(audio => {
+        try {
+          audio.pause();
+          audio.currentTime = 0;
+          audio.onended = null;
+          audio.onerror = null;
+          audio.oncanplaythrough = null;
+        } catch (e) {
+          // 忽略清理错误
+        }
+      });
+    });
+    sfxPoolRef.current = {};
+
     Object.entries(sfxFiles).forEach(([key, src]) => {
       const pool = [];
       for (let i = 0; i < POOL_SIZE; i++) {
@@ -287,13 +303,15 @@ export function AudioProvider({ children }) {
       return;
     }
 
-    // ✅ 停止当前播放（如果正在播放）
-    if (!sfxAudio.paused) {
+    // ✅ 强制停止并重置音频
+    try {
       sfxAudio.pause();
+      sfxAudio.currentTime = 0;
+      // 移除所有旧的事件监听器，避免重复绑定
+      sfxAudio.onended = null;
+    } catch (e) {
+      console.warn(`⚠️  重置音频失败: ${sfxName}`, e);
     }
-
-    // ✅ 重置音频到开始位置
-    sfxAudio.currentTime = 0;
 
     // 播放前降低 BGM 音量（更快的过渡）
     if (isPlaying) {
@@ -320,14 +338,12 @@ export function AudioProvider({ children }) {
         });
     }
 
-    // 设置音效结束回调（使用 once 避免重复绑定）
-    const handleEnded = () => {
+    // 设置音效结束回调（使用 onended 替代 addEventListener）
+    sfxAudio.onended = () => {
       if (isPlaying) {
         restoreBGM(50); // 更快的恢复
       }
     };
-
-    sfxAudio.addEventListener('ended', handleEnded, { once: true });
 
     // 备用：如果音效超时，强制恢复 BGM
     setTimeout(() => {

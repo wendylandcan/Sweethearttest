@@ -23,6 +23,11 @@ export default function QuizPage({ onComplete }) {
     document.body.style.fontFamily = "'ZCOOL KuaiLe', 'Fredoka', 'Quicksand', 'Noto Sans SC', sans-serif";
   }, []);
 
+  // ✅ 组件挂载时重置音效播放标记
+  useEffect(() => {
+    hasPlayedStressSoundRef.current = false;
+  }, []);
+
   // 监听进入第一道高压题，播放音效
   useEffect(() => {
     const current = QUESTIONS[currentIdx];
