@@ -174,8 +174,9 @@ function hexToRgba(hex, a) {
 
 export default function ResultPage({ match, scores, onRetry }) {
   const resultRef = useRef(null);
-  const posterAreaRef = useRef(null); // 新增：专门用于海报区域
+  const posterAreaRef = useRef(null); // 专门用于海报区域
   const [saving, setSaving] = useState(false);
+  const [savingProgress, setSavingProgress] = useState(''); // 新增：进度提示
   const [saved, setSaved] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [generatedImage, setGeneratedImage] = useState('');
@@ -244,236 +245,108 @@ export default function ResultPage({ match, scores, onRetry }) {
     // 播放保存海报音效
     playSFX('/poster-sound.wav');
 
-    setSaving(true);
-    try {
-      console.log('开始生成海报...');
+    if (!posterAreaRef.current || saving) return;
 
-      // 1. 确保字体已加载
+    setSaving(true);
+    setSavingProgress('准备中...');
+
+    try {
+      console.log('🎨 开始生成海报...');
+
+      // 1. 等待字体加载
+      setSavingProgress('加载资源中...');
       if (document.fonts && document.fonts.ready) {
         await document.fonts.ready;
-        console.log('字体加载完成');
+        console.log('✅ 字体加载完成');
       }
 
-      // 2. 获取雷达图 Canvas 并转换为图片
-      const radarCanvas = posterAreaRef.current?.querySelector('canvas');
-      let radarImageData = '';
-      if (radarCanvas) {
-        try {
-          radarImageData = radarCanvas.toDataURL('image/png');
-          console.log('雷达图转换成功，数据长度:', radarImageData.length);
-        } catch (e) {
-          console.error('雷达图转换失败:', e);
-        }
-      } else {
-        console.warn('未找到雷达图 Canvas');
-      }
+      // 2. 等待所有图片加载完成
+      const images = posterAreaRef.current.querySelectorAll('img');
+      console.log(`📷 找到 ${images.length} 张图片`);
 
-      // 3. 创建隐藏的海报模板
-      const posterTemplate = document.createElement('div');
-      posterTemplate.style.cssText = `
-        position: fixed;
-        left: -9999px;
-        top: 0;
-        width: 375px;
-        background: linear-gradient(180deg, ${hexToRgba(themeColor, 0.13)} 0%, #fffaf5 60%, #ffffff 100%);
-        font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;
-        padding: 30px 20px;
-        box-sizing: border-box;
-        overflow: visible;
-      `;
+      await Promise.all(
+        Array.from(images).map((img, index) => {
+          const htmlImg = img;
 
-      // 4. 构建海报内容
-      posterTemplate.innerHTML = `
-        <div style="text-align: center; width: 100%;">
-          <!-- 标题 -->
-          <p style="font-size: 11px; color: rgba(94, 59, 37, 0.5); margin: 0 0 10px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif; font-weight: 400;">
-            圣夜学园 · 心灵之蛋
-          </p>
-          <p style="font-size: 13px; color: rgba(94, 59, 37, 0.7); margin: 0 0 20px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif; font-weight: 400;">
-            你的守护甜心是
-          </p>
+          // 检查图片状态
+          console.log(`图片 ${index + 1}:`, {
+            src: htmlImg.src,
+            complete: htmlImg.complete,
+            naturalWidth: htmlImg.naturalWidth,
+            naturalHeight: htmlImg.naturalHeight
+          });
 
-          <!-- 人物名称 -->
-          <h1 style="font-size: 32px; font-weight: 700; color: ${themeColor}; margin: 0 0 8px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff, 0 3px 0 ${hexToRgba(themeColor, 0.4)}; letter-spacing: 0.12em;">
-            ${nameZh}
-          </h1>
-          ${nameEn ? `<p style="font-size: 12px; font-weight: 700; color: ${hexToRgba(themeColor, 0.7)}; margin: 0 0 20px 0; font-family: 'Nunito', sans-serif; letter-spacing: 0.18em;">
-            ${nameEn.toUpperCase()}
-          </p>` : '<div style="height: 20px;"></div>'}
+          // 已加载完成
+          if (htmlImg.complete && htmlImg.naturalWidth > 0) {
+            console.log(`✅ 图片 ${index + 1} 已加载`);
+            return Promise.resolve();
+          }
 
-          <!-- 立绘 -->
-          <div style="margin: 20px auto; display: flex; justify-content: center; width: 100%;">
-            <img
-              class="poster-guardian-img"
-              src="${guardianImageUrl}"
-              alt="${match.name}"
-              crossorigin="anonymous"
-              style="width: 200px; height: auto; display: block; max-width: 100%;"
-            />
-          </div>
+          // 等待加载
+          return new Promise((resolve) => {
+            htmlImg.onload = () => {
+              console.log(`✅ 图片 ${index + 1} 加载成功`);
+              resolve();
+            };
+            htmlImg.onerror = (e) => {
+              console.error(`❌ 图片 ${index + 1} 加载失败:`, htmlImg.src, e);
+              resolve(); // 即使失败也继续
+            };
+            setTimeout(() => {
+              console.warn(`⚠️  图片 ${index + 1} 加载超时`);
+              resolve();
+            }, 5000);
+          });
+        })
+      );
+      console.log('✅ 所有图片加载完成');
 
-          <!-- 关键词 -->
-          <div style="display: inline-block; padding: 8px 20px; border: 2px solid ${themeColor}; border-radius: 25px; margin: 15px 0; font-size: 13px; font-weight: 700; color: ${themeColor}; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
-            <span style="font-size: 10px; opacity: 0.7;">✦</span> ${match.keyword} <span style="font-size: 10px; opacity: 0.7;">✦</span>
-          </div>
+      // 3. 额外等待 500ms 确保渲染完成
+      setSavingProgress('渲染海报中...');
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-          <!-- 口号 -->
-          <div style="padding: 12px 15px; background: ${hexToRgba(themeColor, 0.07)}; border: 1px solid ${hexToRgba(themeColor, 0.5)}; border-radius: 12px; margin: 15px 0; font-size: 13px; color: ${hexToRgba(themeColor, 0.9)}; line-height: 1.6; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif; font-weight: 400;">
-            ${match.tagline}
-          </div>
+      // 4. 获取完整尺寸（使用 scrollHeight）
+      const actualHeight = posterAreaRef.current.scrollHeight;
+      const actualWidth = posterAreaRef.current.offsetWidth;
+      console.log('📐 海报尺寸:', actualWidth, 'x', actualHeight);
 
-          <!-- 雷达图 -->
-          ${radarImageData ? `
-          <div style="margin: 20px auto; display: flex; justify-content: center; width: 100%;">
-            <img
-              class="poster-radar-img"
-              src="${radarImageData}"
-              alt="能力雷达图"
-              style="width: 240px; height: 240px; display: block;"
-            />
-          </div>
-          ` : '<div style="height: 240px; background: rgba(0,0,0,0.05); margin: 20px auto; width: 240px; display: flex; align-items: center; justify-content: center; color: rgba(0,0,0,0.3);">雷达图加载失败</div>'}
+      // 5. 动态导入 modern-screenshot
+      console.log('📦 导入 modern-screenshot...');
+      const { domToPng } = await import('modern-screenshot');
+      console.log('✅ modern-screenshot 导入成功');
 
-          <!-- 灵魂图鉴标题 -->
-          <h3 style="font-size: 16px; font-weight: 700; color: ${themeColor}; margin: 25px 0 15px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
-            ◆ 灵魂图鉴
-          </h3>
-
-          <!-- 灵魂图鉴内容 -->
-          ${[
-            { label: "灵魂底色", text: match.soulColor, icon: "◇" },
-            { label: "天赋魔法", text: match.magicGift, icon: "✧" },
-            { label: "暗影陷阱", text: match.shadowTrap, icon: "◆" },
-            ...(match.letter ? [{ label: "破壳寄语", text: match.letter, icon: "♡" }] : []),
-          ].map(({ label, text, icon }) => `
-            <div style="text-align: left; padding: 12px 15px; background: ${hexToRgba(themeColor, 0.07)}; border-left: 3px solid ${themeColor}; margin: 10px 0; border-radius: 4px;">
-              <h4 style="font-size: 13px; font-weight: 700; color: ${themeColor}; margin: 0 0 8px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
-                <span style="font-size: 11px; opacity: 0.8;">${icon}</span> ${label}
-              </h4>
-              <p style="font-size: 12px; color: rgba(94, 59, 37, 0.8); margin: 0; line-height: 1.6; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif; font-weight: 400;">
-                ${text}
-              </p>
-            </div>
-          `).join('')}
-
-          <!-- 社交磁场 -->
-          ${social && (fatedChar || avoidChar) ? `
-          <h3 style="font-size: 16px; font-weight: 700; color: ${themeColor}; margin: 25px 0 15px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
-            ◆ 社交磁场
-          </h3>
-          ${fatedChar && social.fatedDesc ? `
-          <div style="text-align: left; padding: 12px 15px; background: ${hexToRgba(fatedChar.themeColor || fatedChar.color, 0.08)}; border: 2px solid ${hexToRgba(fatedChar.themeColor || fatedChar.color, 0.4)}; margin: 10px 0; border-radius: 8px;">
-            <h4 style="font-size: 12px; font-weight: 700; color: ${fatedChar.themeColor || fatedChar.color}; margin: 0 0 5px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
-              宿命契合
-            </h4>
-            <p style="font-size: 14px; font-weight: 700; color: ${fatedChar.themeColor || fatedChar.color}; margin: 0 0 5px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
-              ${fatedChar.name.split('(')[0].trim()}
-            </p>
-            <p style="font-size: 11px; color: ${hexToRgba(fatedChar.themeColor || fatedChar.color, 0.88)}; margin: 0; line-height: 1.5; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif; font-weight: 400;">
-              ${social.fatedDesc}
-            </p>
-          </div>
-          ` : ''}
-          ${avoidChar && social.avoidDesc ? `
-          <div style="text-align: left; padding: 12px 15px; background: ${hexToRgba(avoidChar.themeColor || avoidChar.color, 0.08)}; border: 2px solid ${hexToRgba(avoidChar.themeColor || avoidChar.color, 0.4)}; margin: 10px 0; border-radius: 8px;">
-            <h4 style="font-size: 12px; font-weight: 700; color: ${avoidChar.themeColor || avoidChar.color}; margin: 0 0 5px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
-              绝对避雷
-            </h4>
-            <p style="font-size: 14px; font-weight: 700; color: ${avoidChar.themeColor || avoidChar.color}; margin: 0 0 5px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
-              ${avoidChar.name.split('(')[0].trim()}
-            </p>
-            <p style="font-size: 11px; color: ${hexToRgba(avoidChar.themeColor || avoidChar.color, 0.88)}; margin: 0; line-height: 1.5; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif; font-weight: 400;">
-              ${social.avoidDesc}
-            </p>
-          </div>
-          ` : ''}
-          ` : ''}
-
-          <!-- 水印 -->
-          <p style="font-size: 10px; color: rgba(94, 59, 37, 0.4); margin: 25px 0 10px 0; font-family: 'Fredoka', 'Quicksand', sans-serif; font-weight: 300; letter-spacing: 0.15em;">
-            圣夜学园 · 心灵之蛋 · Project Humpty-Lock
-          </p>
-        </div>
-      `;
-
-      // 5. 添加到 DOM
-      document.body.appendChild(posterTemplate);
-      console.log('海报模板已添加到 DOM');
-
-      // 6. 等待所有图片加载完成
-      const images = posterTemplate.querySelectorAll('img');
-      console.log('找到图片数量:', images.length);
-
-      const imagePromises = Array.from(images).map((img, index) => {
-        if (img.complete && img.naturalHeight !== 0) {
-          console.log(`图片 ${index} 已加载`);
-          return Promise.resolve();
-        }
-        return new Promise((resolve, reject) => {
-          img.onload = () => {
-            console.log(`图片 ${index} 加载成功`);
-            resolve();
-          };
-          img.onerror = (e) => {
-            console.error(`图片 ${index} 加载失败:`, img.src, e);
-            resolve(); // 即使失败也继续
-          };
-          setTimeout(() => {
-            console.warn(`图片 ${index} 加载超时`);
-            resolve();
-          }, 5000);
-        });
-      });
-
-      await Promise.all(imagePromises);
-      console.log('所有图片加载完成');
-
-      // 等待一小段时间确保渲染完成
-      await new Promise(resolve => setTimeout(resolve, 300));
-
-      // 获取模板的实际高度
-      const templateHeight = posterTemplate.offsetHeight;
-      console.log('模板实际高度:', templateHeight);
-
-      // 7. 动态导入 html2canvas
-      console.log('开始导入 html2canvas...');
-      const html2canvas = (await import('html2canvas')).default;
-      console.log('html2canvas 导入成功');
-
-      // 8. 生成海报 - 使用实际高度
-      console.log('开始生成 canvas...');
-      const canvas = await html2canvas(posterTemplate, {
-        useCORS: true,
-        scale: 3,
-        allowTaint: false,
-        logging: true, // 开启日志
-        width: 375,
-        height: templateHeight, // 使用实际高度
-        windowWidth: 375,
-        windowHeight: templateHeight,
+      // 6. 生成海报
+      console.log('📸 开始生成图片...');
+      const dataUrl = await domToPng(posterAreaRef.current, {
+        quality: 1,           // 最高质量
+        scale: 2,             // 2倍分辨率（足够清晰）
+        width: actualWidth,
+        height: actualHeight, // 使用完整高度
         backgroundColor: '#ffffff',
+        filter: (node) => {
+          // 过滤掉不需要的元素
+          if (node.classList?.contains('star-field')) {
+            return false; // 不截取背景星星
+          }
+          return true;
+        }
       });
-      console.log('Canvas 生成成功，尺寸:', canvas.width, 'x', canvas.height);
 
-      // 9. 转换为图片
-      const dataUrl = canvas.toDataURL('image/png', 0.95);
-      console.log('海报生成成功，数据长度:', dataUrl.length);
+      console.log('✅ 图片生成完成，大小:', dataUrl.length, 'bytes');
 
-      // 10. 移除模板
-      document.body.removeChild(posterTemplate);
-      console.log('海报模板已移除');
-
-      // 11. 显示模态框
+      // 7. 显示模态框
       setGeneratedImage(dataUrl);
       setShowModal(true);
       setSaved(true);
+
     } catch (e) {
-      console.error('保存海报失败:', e);
+      console.error('❌ 保存海报失败:', e);
       console.error('错误堆栈:', e.stack);
       const errorMsg = e.message || '未知错误';
       alert(`保存失败: ${errorMsg}\n\n请尝试：\n1. 刷新页面后重试\n2. 检查网络连接\n3. 清除浏览器缓存\n\n技术信息：${e.stack?.split('\n')[0] || '无'}`);
     } finally {
       setSaving(false);
+      setSavingProgress('');
     }
   };
 
@@ -582,7 +455,13 @@ export default function ResultPage({ match, scores, onRetry }) {
                 background: `radial-gradient(ellipse at center, ${hexToRgba(themeColor, 0.18)} 0%, transparent 72%)`,
               }}
             />
-            <img className="result-guardian-image" src={guardianImageUrl} alt={`${match.name} 守护甜心`} />
+            <img
+              className="result-guardian-image"
+              src={guardianImageUrl}
+              alt={`${match.name} 守护甜心`}
+              crossOrigin="anonymous"
+              loading="eager"
+            />
           </motion.div>
 
           {/* 关键词 + 口号：放在人物与六维表之间 */}
@@ -745,7 +624,7 @@ export default function ResultPage({ match, scores, onRetry }) {
             onClick={handleSavePoster}
             disabled={saving}
           >
-            {saving ? "生成中…" : saved ? "再次保存海报" : "保存海报"}
+            {saving ? savingProgress : saved ? "再次保存海报" : "保存海报"}
           </button>
           <button className="action-btn ghost" onClick={() => {
             playSFX('/poster-sound.wav');
