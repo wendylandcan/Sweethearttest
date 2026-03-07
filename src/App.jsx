@@ -7,6 +7,7 @@ import ResultPage from "./components/ResultPage";
 import BackgroundMusic from "./components/BackgroundMusic";
 import { AudioProvider } from "./contexts/AudioContext";
 import { AnimatePresence, motion } from "framer-motion";
+import { useAnalytics } from "./hooks/useAnalytics";
 
 const pageVariants = {
   initial: { opacity: 0 },
@@ -18,25 +19,42 @@ export default function App() {
   const [phase, setPhase] = useState("invitation"); // invitation | loading | preloading | quiz | result
   const [result, setResult] = useState(null);
   const [savedPasscode, setSavedPasscode] = useState(""); // 保存用户输入的邀请码
+  const { trackPageView, trackQuizStart, trackQuizComplete } = useAnalytics();
 
   // 全局强制应用可爱字体
   useEffect(() => {
     document.body.style.fontFamily = "'ZCOOL KuaiLe', 'Fredoka', 'Quicksand', 'Noto Sans SC', sans-serif";
   }, []);
 
+  // 追踪页面切换
+  useEffect(() => {
+    const pageNames = {
+      invitation: '邀请码页面',
+      preloading: '资源加载页面',
+      loading: '心灵之蛋页面',
+      quiz: '答题页面',
+      result: '结果页面',
+    };
+    trackPageView(pageNames[phase] || phase);
+  }, [phase, trackPageView]);
+
   const handleVerified = useCallback((passcode) => {
     setSavedPasscode(passcode); // 保存邀请码
     setPhase("preloading");
   }, []);
 
-  const handleStart = useCallback(() => setPhase("quiz"), []);
+  const handleStart = useCallback(() => {
+    trackQuizStart(savedPasscode);
+    setPhase("quiz");
+  }, [savedPasscode, trackQuizStart]);
 
   const handlePreloadComplete = useCallback(() => setPhase("loading"), []);
 
   const handleComplete = useCallback(({ scores, match }) => {
     setResult({ scores, match });
+    trackQuizComplete(match.id, scores);
     setPhase("result");
-  }, []);
+  }, [trackQuizComplete]);
 
   const handleRetry = useCallback(() => {
     setResult(null);

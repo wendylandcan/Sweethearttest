@@ -1,13 +1,20 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useAudio } from "../contexts/AudioContext";
+import { useAnalytics } from "../hooks/useAnalytics";
 
 export default function BackgroundMusic() {
   const { isPlaying, toggle } = useAudio();
+  const { trackAudioToggle } = useAnalytics();
+
+  const handleToggle = () => {
+    toggle();
+    trackAudioToggle(!isPlaying);
+  };
 
   return (
     <motion.button
       className="bgm-control"
-      onClick={toggle}
+      onClick={handleToggle}
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: 0.5, duration: 0.4 }}

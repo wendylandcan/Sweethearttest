@@ -4,6 +4,7 @@ import RadarChart from "./RadarChart";
 import { saveResult } from "../lib/supabase";
 import { getCharById, SOCIAL_MAGNETISM } from "../data/characters";
 import { useAudio } from "../contexts/AudioContext";
+import { useAnalytics } from "../hooks/useAnalytics";
 
 function StarField({ color }) {
   const stars = useMemo(
@@ -181,6 +182,7 @@ export default function ResultPage({ match, scores, onRetry }) {
   const [showModal, setShowModal] = useState(false);
   const [generatedImage, setGeneratedImage] = useState('');
   const { playSFX } = useAudio(); // 获取音效播放方法
+  const { trackPosterDownload } = useAnalytics(); // 获取 GA 追踪方法
   const guardianImageUrl = `/guardians/${match.id}.png`;
   const themeColor = match.themeColor || match.color;
   const themeGlow = hexToRgba(themeColor, 0.4);
@@ -550,6 +552,9 @@ export default function ResultPage({ match, scores, onRetry }) {
       setGeneratedImage(dataUrl);
       setShowModal(true);
       setSaved(true);
+
+      // 追踪海报下载事件
+      trackPosterDownload(match.id);
 
     } catch (e) {
       console.error('❌ 保存海报失败:', e);
