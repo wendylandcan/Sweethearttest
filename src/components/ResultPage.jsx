@@ -260,21 +260,36 @@ export default function ResultPage({ match, scores, onRetry }) {
         console.log('✅ 字体加载完成');
       }
 
-      // 2. 转换雷达图为图片
+      // 2. 等待雷达图渲染完成并转换为图片
       setSavingProgress('转换雷达图...');
       let radarImageData = '';
       const radarContainer = document.querySelector('.radar-container');
       if (radarContainer) {
         try {
+          // 等待额外时间确保雷达图完全渲染（包括字体）
+          await new Promise(resolve => setTimeout(resolve, 500));
+
           const html2canvasTemp = (await import('html2canvas')).default;
           const radarCanvas = await html2canvasTemp(radarContainer, {
             useCORS: true,
-            scale: 2,
-            backgroundColor: null,
+            scale: 3, // 提高分辨率到 3 倍
+            backgroundColor: null, // 透明背景
             logging: false,
+            // 确保捕获所有字体
+            onclone: (clonedDoc) => {
+              const clonedContainer = clonedDoc.querySelector('.radar-container');
+              if (clonedContainer) {
+                // 强制应用字体
+                const texts = clonedContainer.querySelectorAll('text');
+                texts.forEach(text => {
+                  text.style.fontFamily = "'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif";
+                  text.style.fontWeight = '700';
+                });
+              }
+            }
           });
           radarImageData = radarCanvas.toDataURL('image/png');
-          console.log('✅ 雷达图转换成功');
+          console.log('✅ 雷达图转换成功，尺寸:', radarCanvas.width, 'x', radarCanvas.height);
         } catch (e) {
           console.error('❌ 雷达图转换失败:', e);
         }
