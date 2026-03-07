@@ -198,8 +198,8 @@ export function AudioProvider({ children }) {
     }
   };
 
-  // BGM Ducking - 降低 BGM 音量（优化：更快的过渡）
-  const duckBGM = (targetVolume = 0.1, duration = 30) => {
+  // BGM Ducking - 立即降低 BGM 音量（无过渡动画）
+  const duckBGM = (targetVolume = 0.1) => {
     const audio = audioRef.current;
     if (!audio || !isPlaying) return;
 
@@ -210,25 +210,11 @@ export function AudioProvider({ children }) {
     }
 
     isDuckingRef.current = true;
-    const currentVolume = audio.volume;
-
-    // 使用更少的步数，更快的过渡
-    const steps = 2;
-    const stepDuration = duration / steps;
-    const volumeStep = (currentVolume - targetVolume) / steps;
-    let currentStep = 0;
-
-    const duckInterval = setInterval(() => {
-      currentStep++;
-      audio.volume = Math.max(currentVolume - volumeStep * currentStep, targetVolume);
-
-      if (currentStep >= steps) {
-        clearInterval(duckInterval);
-      }
-    }, stepDuration);
+    // ✅ 立即设置音量，无过渡
+    audio.volume = targetVolume;
   };
 
-  // 恢复 BGM 音量（优化：更快的恢复）
+  // 恢复 BGM 音量（快速过渡）
   const restoreBGM = (duration = 50) => {
     const audio = audioRef.current;
     if (!audio || !isPlaying || !isDuckingRef.current) return;
@@ -287,7 +273,7 @@ export function AudioProvider({ children }) {
     return pool[0];
   };
 
-  // ✅ 修复 4: 播放音效，强制重置正在播放的音频
+  // ✅ 修复 4: 播放音效，立即播放不等待 BGM ducking
   const playSFX = (src) => {
     // 从路径提取音效名称
     const sfxName = src.split('/').pop().replace('-sound.wav', '').replace('.wav', '');
@@ -309,13 +295,13 @@ export function AudioProvider({ children }) {
       // 忽略重置错误，继续播放
     }
 
-    // 播放前降低 BGM 音量（更快的过渡）
-    if (isPlaying) {
-      duckBGM(0.1, 30); // 减少到 30ms
-    }
-
-    // 立即播放（不等待 Promise）
+    // ✅ 立即播放音效，不等待任何操作
     const playPromise = sfxAudio.play();
+
+    // ✅ 播放后立即降低 BGM 音量（异步，不阻塞音效播放）
+    if (isPlaying) {
+      duckBGM(0.1);
+    }
 
     if (playPromise !== undefined) {
       playPromise
@@ -341,7 +327,7 @@ export function AudioProvider({ children }) {
     // 设置音效结束回调（使用 onended 替代 addEventListener）
     sfxAudio.onended = () => {
       if (isPlaying) {
-        restoreBGM(50); // 更快的恢复
+        restoreBGM(50);
       }
     };
 
@@ -350,7 +336,7 @@ export function AudioProvider({ children }) {
       if (isPlaying && isDuckingRef.current) {
         restoreBGM(50);
       }
-    }, 2000); // 减少到 2 秒
+    }, 2000);
   };
 
   const value = {
