@@ -202,8 +202,8 @@ export function AudioProvider({ children }) {
     }
   };
 
-  // BGM Ducking - 降低 BGM 音量
-  const duckBGM = (targetVolume = 0.1, duration = 150) => {
+  // BGM Ducking - 降低 BGM 音量（优化：更快的过渡）
+  const duckBGM = (targetVolume = 0.1, duration = 30) => {
     const audio = audioRef.current;
     if (!audio || !isPlaying) return;
 
@@ -215,7 +215,9 @@ export function AudioProvider({ children }) {
 
     isDuckingRef.current = true;
     const currentVolume = audio.volume;
-    const steps = 4; // 最少步数
+
+    // 使用更少的步数，更快的过渡
+    const steps = 2;
     const stepDuration = duration / steps;
     const volumeStep = (currentVolume - targetVolume) / steps;
     let currentStep = 0;
@@ -230,15 +232,17 @@ export function AudioProvider({ children }) {
     }, stepDuration);
   };
 
-  // 恢复 BGM 音量
-  const restoreBGM = (duration = 300) => {
+  // 恢复 BGM 音量（优化：更快的恢复）
+  const restoreBGM = (duration = 50) => {
     const audio = audioRef.current;
     if (!audio || !isPlaying || !isDuckingRef.current) return;
 
     isDuckingRef.current = false;
     const currentVolume = audio.volume;
     const targetVolume = originalVolumeRef.current;
-    const steps = 5; // 最少步数
+
+    // 使用更少的步数，更快的恢复
+    const steps = 2;
     const stepDuration = duration / steps;
     const volumeStep = (targetVolume - currentVolume) / steps;
     let currentStep = 0;
@@ -274,9 +278,6 @@ export function AudioProvider({ children }) {
 
   // ✅ 修复 4: 播放音效，强制重置正在播放的音频
   const playSFX = (src) => {
-    console.log(`🎵 尝试播放音效: ${src}`);
-    console.log(`🔓 音频解锁状态: ${isAudioUnlocked}`);
-
     // 从路径提取音效名称
     const sfxName = src.split('/').pop().replace('-sound.wav', '').replace('.wav', '');
     const sfxAudio = getAvailableAudio(sfxName);
@@ -286,8 +287,6 @@ export function AudioProvider({ children }) {
       return;
     }
 
-    console.log(`🎧 获取到音频实例，状态: paused=${sfxAudio.paused}, currentTime=${sfxAudio.currentTime}`);
-
     // ✅ 停止当前播放（如果正在播放）
     if (!sfxAudio.paused) {
       sfxAudio.pause();
@@ -296,9 +295,9 @@ export function AudioProvider({ children }) {
     // ✅ 重置音频到开始位置
     sfxAudio.currentTime = 0;
 
-    // 播放前降低 BGM 音量
+    // 播放前降低 BGM 音量（更快的过渡）
     if (isPlaying) {
-      duckBGM(0.15, 50);
+      duckBGM(0.1, 30); // 减少到 30ms
     }
 
     // 立即播放
@@ -307,7 +306,6 @@ export function AudioProvider({ children }) {
     if (playPromise !== undefined) {
       playPromise
         .then(() => {
-          console.log(`✅ ${sfxName} 音效播放成功`);
           // 首次成功播放后标记音频已解锁
           if (!isAudioUnlocked) {
             setIsAudioUnlocked(true);
@@ -317,7 +315,7 @@ export function AudioProvider({ children }) {
           console.warn(`❌ 音效播放失败: ${sfxName}`, err);
           // 即使失败也要恢复 BGM
           if (isPlaying) {
-            setTimeout(() => restoreBGM(100), 500);
+            setTimeout(() => restoreBGM(50), 100);
           }
         });
     }
@@ -325,7 +323,7 @@ export function AudioProvider({ children }) {
     // 设置音效结束回调（使用 once 避免重复绑定）
     const handleEnded = () => {
       if (isPlaying) {
-        setTimeout(() => restoreBGM(100), 10);
+        restoreBGM(50); // 更快的恢复
       }
     };
 
@@ -334,9 +332,9 @@ export function AudioProvider({ children }) {
     // 备用：如果音效超时，强制恢复 BGM
     setTimeout(() => {
       if (isPlaying && isDuckingRef.current) {
-        restoreBGM(100);
+        restoreBGM(50);
       }
-    }, 3000);
+    }, 2000); // 减少到 2 秒
   };
 
   const value = {
