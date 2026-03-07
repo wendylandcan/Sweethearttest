@@ -30,7 +30,8 @@ export function AudioProvider({ children }) {
       'success': '/success-sound.wav',
       'start': '/start-sound.wav',
       'result': '/result-sound.wav',
-      'poster': '/poster-sound.wav'
+      'poster': '/poster-sound.wav',
+      'stress': '/stress-sound.wav'
     };
 
     Object.entries(sfxFiles).forEach(([key, src]) => {

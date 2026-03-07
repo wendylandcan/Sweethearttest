@@ -22,6 +22,15 @@ export default function QuizPage({ onComplete }) {
     document.body.style.fontFamily = "'ZCOOL KuaiLe', 'Fredoka', 'Quicksand', 'Noto Sans SC', sans-serif";
   }, []);
 
+  // 监听进入第一道高压题，播放音效
+  useEffect(() => {
+    const current = QUESTIONS[currentIdx];
+    if (current?.isHighPressure && !hasAnsweredFirstHighPressure) {
+      console.log('🔥 进入高压测试题，播放音效');
+      playSFX('/stress-sound.wav');
+    }
+  }, [currentIdx, hasAnsweredFirstHighPressure, playSFX]);
+
   const current = QUESTIONS[currentIdx];
   const isHighPressure = current?.isHighPressure;
   const progress = currentIdx / QUESTIONS.length;
