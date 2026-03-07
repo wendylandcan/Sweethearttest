@@ -247,50 +247,49 @@ export default function ResultPage({ match, scores, onRetry }) {
 
     setSaving(true);
     try {
+      console.log('开始生成海报...');
+      console.log('posterAreaRef.current:', posterAreaRef.current);
+
+      // 检查 ref 是否存在
+      if (!posterAreaRef.current) {
+        throw new Error('海报区域引用不存在，请刷新页面重试');
+      }
+
       // 1. 预加载立绘图片
       const guardianImg = new Image();
-      guardianImg.crossOrigin = 'anonymous';
       guardianImg.src = guardianImageUrl;
       await new Promise((resolve, reject) => {
-        guardianImg.onload = resolve;
-        guardianImg.onerror = () => {
-          console.log('图片加载失败，尝试不使用 crossOrigin');
-          guardianImg.crossOrigin = '';
-          guardianImg.src = guardianImageUrl;
-          guardianImg.onload = resolve;
-          guardianImg.onerror = reject;
+        guardianImg.onload = () => {
+          console.log('立绘加载成功');
+          resolve();
         };
-        setTimeout(reject, 5000);
+        guardianImg.onerror = () => {
+          console.log('立绘加载失败，继续执行');
+          resolve(); // 即使失败也继续
+        };
+        setTimeout(() => {
+          console.log('立绘加载超时');
+          resolve();
+        }, 3000);
       });
 
-      // 2. 获取雷达图 Canvas 并转换为图片
-      const radarCanvas = posterAreaRef.current?.querySelector('canvas');
-      let radarImageUrl = '';
-      if (radarCanvas) {
-        try {
-          radarImageUrl = radarCanvas.toDataURL('image/png');
-        } catch (e) {
-          console.error('雷达图转换失败:', e);
-        }
-      }
-
-      // 3. 使用 html2canvas 直接截取 poster-area
+      // 2. 使用 html2canvas 直接截取 poster-area
+      console.log('开始截图...');
       const html2canvas = (await import("html2canvas")).default;
       const posterArea = posterAreaRef.current;
-
-      if (!posterArea) {
-        throw new Error('找不到海报区域');
-      }
 
       const canvas = await html2canvas(posterArea, {
         useCORS: true,
         allowTaint: true,
         scale: 2,
         backgroundColor: '#FFFFFF',
-        logging: false,
+        logging: true, // 开启日志
         scrollX: 0,
-        scrollY: -window.scrollY,
+        scrollY: 0,
+        windowWidth: posterArea.scrollWidth,
+        windowHeight: posterArea.scrollHeight,
         onclone: (clonedDoc) => {
+          console.log('克隆文档完成');
           // 隐藏所有光晕元素
           const glowElements = clonedDoc.querySelectorAll('.result-char-name-glow, .char-name-glow, .soul-catalog-title-glow, .guardian-glow');
           glowElements.forEach(el => {
@@ -318,16 +317,20 @@ export default function ResultPage({ match, scores, onRetry }) {
         }
       });
 
-      // 4. 转换为 JPEG
+      console.log('截图完成，转换为图片...');
+
+      // 3. 转换为 JPEG
       const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
 
-      // 5. 显示模态框供用户长按保存
+      console.log('图片生成成功');
+
+      // 4. 显示模态框供用户长按保存
       setGeneratedImage(dataUrl);
       setShowModal(true);
       setSaved(true);
     } catch (e) {
       console.error('保存海报失败:', e);
-      alert(`保存失败: ${e.message}\n\n请尝试刷新页面后重试。`);
+      alert(`保存失败: ${e.message}\n\n详细信息：${e.stack || '无'}`);
     } finally {
       setSaving(false);
     }
