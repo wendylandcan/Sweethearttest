@@ -440,7 +440,7 @@ export default function ResultPage({ match, scores, onRetry }) {
               </h3>
 
               ${fatedChar && social.fatedDesc ? `
-                <div style="background: #ffffff; border: 1.5px solid ${hexToRgba(fatedChar.themeColor || fatedChar.color, 0.4)}; border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+                <div style="background: ${hexToRgba(fatedChar.themeColor || fatedChar.color, 0.12)}; border: 1.5px solid ${hexToRgba(fatedChar.themeColor || fatedChar.color, 0.4)}; border-radius: 12px; padding: 16px; margin-bottom: 12px;">
                   <h4 style="font-size: 13px; font-weight: 700; color: ${fatedChar.themeColor || fatedChar.color}; margin: 0 0 8px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
                     宿命契合
                   </h4>
@@ -454,7 +454,7 @@ export default function ResultPage({ match, scores, onRetry }) {
               ` : ''}
 
               ${avoidChar && social.avoidDesc ? `
-                <div style="background: #ffffff; border: 1.5px solid ${hexToRgba(avoidChar.themeColor || avoidChar.color, 0.4)}; border-radius: 12px; padding: 16px;">
+                <div style="background: ${hexToRgba(avoidChar.themeColor || avoidChar.color, 0.12)}; border: 1.5px solid ${hexToRgba(avoidChar.themeColor || avoidChar.color, 0.4)}; border-radius: 12px; padding: 16px;">
                   <h4 style="font-size: 13px; font-weight: 700; color: ${avoidChar.themeColor || avoidChar.color}; margin: 0 0 8px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
                     绝对避雷
                   </h4>
