@@ -269,27 +269,35 @@ export default function ResultPage({ match, scores, onRetry }) {
           // 等待额外时间确保雷达图完全渲染（包括字体）
           await new Promise(resolve => setTimeout(resolve, 500));
 
+          // 在转换前强制应用字体到所有 text 元素
+          const textElements = radarContainer.querySelectorAll('text');
+          const originalStyles = [];
+          textElements.forEach((text, index) => {
+            // 保存原始样式
+            originalStyles[index] = {
+              fontFamily: text.style.fontFamily,
+              fontWeight: text.style.fontWeight
+            };
+            // 强制应用可爱字体
+            text.style.fontFamily = "'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif";
+            text.style.fontWeight = '700';
+          });
+
           const html2canvasTemp = (await import('html2canvas')).default;
           const radarCanvas = await html2canvasTemp(radarContainer, {
             useCORS: true,
             scale: 3, // 提高分辨率到 3 倍
-            backgroundColor: null, // 透明背景
+            backgroundColor: '#ffffff', // 白色背景
             logging: false,
-            // 确保捕获所有字体
-            onclone: (clonedDoc) => {
-              const clonedContainer = clonedDoc.querySelector('.radar-container');
-              if (clonedContainer) {
-                // 强制应用字体
-                const texts = clonedContainer.querySelectorAll('text');
-                texts.forEach(text => {
-                  text.style.fontFamily = "'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif";
-                  text.style.fontWeight = '700';
-                });
-              }
-            }
           });
           radarImageData = radarCanvas.toDataURL('image/png');
           console.log('✅ 雷达图转换成功，尺寸:', radarCanvas.width, 'x', radarCanvas.height);
+
+          // 恢复原始样式
+          textElements.forEach((text, index) => {
+            text.style.fontFamily = originalStyles[index].fontFamily;
+            text.style.fontWeight = originalStyles[index].fontWeight;
+          });
         } catch (e) {
           console.error('❌ 雷达图转换失败:', e);
         }
@@ -312,7 +320,7 @@ export default function ResultPage({ match, scores, onRetry }) {
 
       // 4. 构建海报内容 HTML
       posterTemplate.innerHTML = `
-        <div class="poster-area" style="position: relative; padding: 30px 20px; background: transparent;">
+        <div class="poster-area" style="position: relative; padding: 30px 20px; background: linear-gradient(180deg, ${themeColor}22 0%, #fffaf5 60%, #ffffff 100%);">
           <!-- 别针装饰 -->
           <div style="position: absolute; top: -8px; right: 30px; width: 16px; height: 16px; background: radial-gradient(circle at 30% 30%, #E8D4B8 0%, #C9B299 100%); border: 2px solid #5E3B25; border-radius: 50%; box-shadow: 0 2px 0 #5E3B25, 0 4px 8px rgba(94, 59, 37, 0.3); z-index: 10;"></div>
           <div style="position: absolute; bottom: 20px; left: 25px; width: 16px; height: 16px; background: radial-gradient(circle at 30% 30%, #E8D4B8 0%, #C9B299 100%); border: 2px solid #5E3B25; border-radius: 50%; box-shadow: 0 2px 0 #5E3B25, 0 4px 8px rgba(94, 59, 37, 0.3); z-index: 10;"></div>
