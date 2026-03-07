@@ -174,6 +174,7 @@ function hexToRgba(hex, a) {
 
 export default function ResultPage({ match, scores, onRetry }) {
   const resultRef = useRef(null);
+  const posterAreaRef = useRef(null); // 新增：专门用于海报区域
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -263,7 +264,7 @@ export default function ResultPage({ match, scores, onRetry }) {
       });
 
       // 2. 获取雷达图 Canvas 并转换为图片
-      const radarCanvas = resultRef.current.querySelector('canvas');
+      const radarCanvas = posterAreaRef.current?.querySelector('canvas');
       let radarImageUrl = '';
       if (radarCanvas) {
         try {
@@ -275,7 +276,7 @@ export default function ResultPage({ match, scores, onRetry }) {
 
       // 3. 使用 html2canvas 直接截取 poster-area
       const html2canvas = (await import("html2canvas")).default;
-      const posterArea = resultRef.current.querySelector('.poster-area');
+      const posterArea = posterAreaRef.current;
 
       if (!posterArea) {
         throw new Error('找不到海报区域');
@@ -339,7 +340,7 @@ export default function ResultPage({ match, scores, onRetry }) {
 
       <div className="result-scroll">
         {/* Poster area */}
-        <div ref={resultRef} className="poster-area">
+        <div ref={posterAreaRef} className="poster-area">
           {/* 别针装饰 - 右上角 */}
           <div style={{
             position: 'absolute',
