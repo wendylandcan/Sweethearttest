@@ -275,7 +275,6 @@ export default function ResultPage({ match, scores, onRetry }) {
         left: -9999px;
         top: 0;
         width: 375px;
-        min-height: 800px;
         background: linear-gradient(180deg, ${hexToRgba(themeColor, 0.13)} 0%, #fffaf5 60%, #ffffff 100%);
         font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;
         padding: 30px 20px;
@@ -432,12 +431,16 @@ export default function ResultPage({ match, scores, onRetry }) {
       // 等待一小段时间确保渲染完成
       await new Promise(resolve => setTimeout(resolve, 300));
 
+      // 获取模板的实际高度
+      const templateHeight = posterTemplate.offsetHeight;
+      console.log('模板实际高度:', templateHeight);
+
       // 7. 动态导入 html2canvas
       console.log('开始导入 html2canvas...');
       const html2canvas = (await import('html2canvas')).default;
       console.log('html2canvas 导入成功');
 
-      // 8. 生成海报
+      // 8. 生成海报 - 使用实际高度
       console.log('开始生成 canvas...');
       const canvas = await html2canvas(posterTemplate, {
         useCORS: true,
@@ -445,7 +448,9 @@ export default function ResultPage({ match, scores, onRetry }) {
         allowTaint: false,
         logging: true, // 开启日志
         width: 375,
+        height: templateHeight, // 使用实际高度
         windowWidth: 375,
+        windowHeight: templateHeight,
         backgroundColor: '#ffffff',
       });
       console.log('Canvas 生成成功，尺寸:', canvas.width, 'x', canvas.height);
