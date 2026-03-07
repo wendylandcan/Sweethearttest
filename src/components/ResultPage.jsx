@@ -255,76 +255,34 @@ export default function ResultPage({ match, scores, onRetry }) {
         throw new Error('海报区域引用不存在，请刷新页面重试');
       }
 
-      // 1. 预加载立绘图片
-      const guardianImg = new Image();
-      guardianImg.src = guardianImageUrl;
-      await new Promise((resolve, reject) => {
-        guardianImg.onload = () => {
-          console.log('立绘加载成功');
-          resolve();
-        };
-        guardianImg.onerror = () => {
-          console.log('立绘加载失败，继续执行');
-          resolve(); // 即使失败也继续
-        };
-        setTimeout(() => {
-          console.log('立绘加载超时');
-          resolve();
-        }, 3000);
-      });
+      console.log('使用 dom-to-image 生成海报...');
+      const domtoimage = (await import("dom-to-image-more")).default;
 
-      // 2. 使用 html2canvas 直接截取 poster-area
-      console.log('开始截图...');
-      const html2canvas = (await import("html2canvas")).default;
-      const posterArea = posterAreaRef.current;
-
-      const canvas = await html2canvas(posterArea, {
-        useCORS: true,
-        allowTaint: true,
-        scale: 2,
-        backgroundColor: '#FFFFFF',
-        logging: true, // 开启日志
-        scrollX: 0,
-        scrollY: 0,
-        windowWidth: posterArea.scrollWidth,
-        windowHeight: posterArea.scrollHeight,
-        onclone: (clonedDoc) => {
-          console.log('克隆文档完成');
-          // 隐藏所有光晕元素
-          const glowElements = clonedDoc.querySelectorAll('.result-char-name-glow, .char-name-glow, .soul-catalog-title-glow, .guardian-glow');
-          glowElements.forEach(el => {
-            el.style.display = 'none';
-          });
-
-          // 简化文字阴影
-          const nameElements = clonedDoc.querySelectorAll('.result-char-name-zh, .social-card-name, .soul-catalog-title');
-          nameElements.forEach(el => {
-            el.style.textShadow = '-2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff';
-            el.style.filter = 'none';
-          });
-
-          // 确保图片可见
-          const images = clonedDoc.querySelectorAll('img');
-          images.forEach(img => {
-            img.style.display = 'block';
-          });
-
-          // 确保 Canvas 可见
-          const canvases = clonedDoc.querySelectorAll('canvas');
-          canvases.forEach(c => {
-            c.style.display = 'block';
-          });
+      // 使用 dom-to-image-more 生成图片（更好的跨域支持）
+      const dataUrl = await domtoimage.toJpeg(posterAreaRef.current, {
+        quality: 0.92,
+        bgcolor: '#FFFFFF',
+        style: {
+          transform: 'scale(1)',
+          transformOrigin: 'top left'
+        },
+        filter: (node) => {
+          // 过滤掉光晕元素
+          if (node.classList) {
+            return !node.classList.contains('result-char-name-glow') &&
+                   !node.classList.contains('char-name-glow') &&
+                   !node.classList.contains('soul-catalog-title-glow') &&
+                   !node.classList.contains('guardian-glow') &&
+                   !node.classList.contains('card-sparkles') &&
+                   !node.classList.contains('star-field');
+          }
+          return true;
         }
       });
 
-      console.log('截图完成，转换为图片...');
-
-      // 3. 转换为 JPEG
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-
       console.log('图片生成成功');
 
-      // 4. 显示模态框供用户长按保存
+      // 显示模态框供用户长按保存
       setGeneratedImage(dataUrl);
       setShowModal(true);
       setSaved(true);
