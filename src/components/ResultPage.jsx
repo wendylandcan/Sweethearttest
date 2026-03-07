@@ -328,17 +328,57 @@ export default function ResultPage({ match, scores, onRetry }) {
       ctx.drawImage(originalCanvas, 0, 0);
       ctx.filter = 'none';
 
-      // 8. 导出为 JPEG（更高对比度，无透明通道）
-      const dataUrl = enhancedCanvas.toDataURL('image/jpeg', 0.95);
+      // 8. 检测是否为移动端
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-      // 9. 显示模态框供用户长按保存
-      setGeneratedImage(dataUrl);
-      setShowModal(true);
-      setSaved(true);
+      if (isMobile) {
+        // 移动端：转换为 Blob 并尝试使用 Share API
+        enhancedCanvas.toBlob(async (blob) => {
+          if (!blob) {
+            alert('生成图片失败，请重试');
+            setSaving(false);
+            return;
+          }
+
+          // 尝试使用 Web Share API（iOS/Android 原生分享）
+          if (navigator.share && navigator.canShare) {
+            try {
+              const file = new File([blob], 'my-guardian-sweetheart.jpg', { type: 'image/jpeg' });
+              if (navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                  files: [file],
+                  title: '我的守护甜心',
+                  text: '来自圣夜学园的心灵之蛋测验'
+                });
+                setSaved(true);
+                setSaving(false);
+                return;
+              }
+            } catch (err) {
+              console.log('Share API 失败，使用备用方案:', err);
+            }
+          }
+
+          // 备用方案：显示图片供长按保存
+          const dataUrl = URL.createObjectURL(blob);
+          setGeneratedImage(dataUrl);
+          setShowModal(true);
+          setSaved(true);
+          setSaving(false);
+        }, 'image/jpeg', 0.95);
+      } else {
+        // 桌面端：直接下载
+        const dataUrl = enhancedCanvas.toDataURL('image/jpeg', 0.95);
+        const link = document.createElement('a');
+        link.download = 'my-guardian-sweetheart.jpg';
+        link.href = dataUrl;
+        link.click();
+        setSaved(true);
+        setSaving(false);
+      }
     } catch (e) {
       console.error('保存海报失败:', e);
       alert('保存失败，请重试');
-    } finally {
       setSaving(false);
     }
   };
