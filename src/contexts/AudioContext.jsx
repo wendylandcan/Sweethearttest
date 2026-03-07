@@ -277,24 +277,6 @@ export function AudioProvider({ children }) {
     console.log(`🎵 尝试播放音效: ${src}`);
     console.log(`🔓 音频解锁状态: ${isAudioUnlocked}`);
 
-    // 如果音频未解锁，先尝试解锁
-    if (!isAudioUnlocked) {
-      console.log('🔓 音频未解锁，尝试解锁...');
-      // 播放静音音频激活所有实例
-      Object.values(sfxPoolRef.current).forEach(pool => {
-        pool.forEach(audio => {
-          const originalVolume = audio.volume;
-          audio.volume = 0;
-          audio.play().then(() => {
-            audio.pause();
-            audio.currentTime = 0;
-            audio.volume = originalVolume;
-          }).catch(() => {});
-        });
-      });
-      setIsAudioUnlocked(true);
-    }
-
     // 从路径提取音效名称
     const sfxName = src.split('/').pop().replace('-sound.wav', '').replace('.wav', '');
     const sfxAudio = getAvailableAudio(sfxName);
@@ -326,6 +308,10 @@ export function AudioProvider({ children }) {
       playPromise
         .then(() => {
           console.log(`✅ ${sfxName} 音效播放成功`);
+          // 首次成功播放后标记音频已解锁
+          if (!isAudioUnlocked) {
+            setIsAudioUnlocked(true);
+          }
         })
         .catch(err => {
           console.warn(`❌ 音效播放失败: ${sfxName}`, err);
