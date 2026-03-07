@@ -193,9 +193,8 @@ export default function ResultPage({ match, scores, onRetry }) {
 
   // 播放结果展示音效
   useEffect(() => {
-    const resultAudio = new Audio('/result-sound.wav');
-    resultAudio.play().catch(err => console.log('音频播放失败:', err));
-  }, []);
+    playSFX('/result-sound.wav');
+  }, [playSFX]);
 
   // 强制应用可爱字体到整个页面
   useEffect(() => {
@@ -347,8 +346,17 @@ export default function ResultPage({ match, scores, onRetry }) {
       const radarCanvas = posterAreaRef.current?.querySelector('canvas');
       if (radarCanvas) {
         try {
-          const radarSize = 480;
-          ctx.drawImage(radarCanvas, (width - radarSize) / 2, y, radarSize, radarSize);
+          const radarSize = 480; // Canvas 中的雷达图尺寸
+          const displaySize = 240; // 网页中的实际显示尺寸
+          // 创建临时 canvas 来放大雷达图
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = radarSize;
+          tempCanvas.height = radarSize;
+          const tempCtx = tempCanvas.getContext('2d');
+          // 将原始雷达图放大绘制到临时 canvas
+          tempCtx.drawImage(radarCanvas, 0, 0, displaySize, displaySize, 0, 0, radarSize, radarSize);
+          // 将放大后的雷达图绘制到主 canvas
+          ctx.drawImage(tempCanvas, (width - radarSize) / 2, y, radarSize, radarSize);
           y += radarSize + 60;
         } catch (e) {
           console.error('雷达图绘制失败:', e);

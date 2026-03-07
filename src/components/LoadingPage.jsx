@@ -5,7 +5,7 @@ export default function LoadingPage({ onStart }) {
   const [crackStage, setCrackStage] = useState(0);
   const [started, setStarted] = useState(false);
   const [ripple, setRipple] = useState(false);
-  const { tryPlay } = useAudio();
+  const { tryPlay, playSFX } = useAudio();
 
   useEffect(() => {
     if (!started) return;
@@ -27,8 +27,7 @@ export default function LoadingPage({ onStart }) {
     tryPlay();
 
     // 播放开始测试音效
-    const startAudio = new Audio('/start-sound.wav');
-    startAudio.play().catch(err => console.log('音频播放失败:', err));
+    playSFX('/start-sound.wav');
 
     setStarted(true);
     setRipple(true);

@@ -10,7 +10,7 @@ export default function InvitationPage({ onVerified, initialCode = "" }) {
   const [shake, setShake] = useState(false);
   const [loading, setLoading] = useState(false);
   const inputRef = useRef(null);
-  const { tryPlay } = useAudio();
+  const { tryPlay, playSFX } = useAudio();
 
   useEffect(() => {
     // 当 initialCode 改变时，更新 code
@@ -84,8 +84,7 @@ export default function InvitationPage({ onVerified, initialCode = "" }) {
       setShake(true);
 
       // 播放失败音效
-      const errorAudio = new Audio('/error-sound.wav');
-      errorAudio.play().catch(err => console.log('音频播放失败:', err));
+      playSFX('/error-sound.wav');
 
       setTimeout(() => setShake(false), 600);
       setTimeout(() => setError(false), 2000);
@@ -100,15 +99,13 @@ export default function InvitationPage({ onVerified, initialCode = "" }) {
 
       if (result.valid) {
         // 播放成功音效
-        const successAudio = new Audio('/success-sound.wav');
-        successAudio.play().catch(err => console.log('音频播放失败:', err));
+        playSFX('/success-sound.wav');
 
         // 验证成功：触发心灵之蛋破壳动画，并传递邀请码
         onVerified(trimmedCode);
       } else {
         // 播放失败音效
-        const errorAudio = new Audio('/error-sound.wav');
-        errorAudio.play().catch(err => console.log('音频播放失败:', err));
+        playSFX('/error-sound.wav');
 
         // 验证失败：触发抖动和红色光晕
         setErrorMessage(result.error || "考号无效");
@@ -124,8 +121,7 @@ export default function InvitationPage({ onVerified, initialCode = "" }) {
       console.error("Validation error:", err);
 
       // 播放失败音效
-      const errorAudio = new Audio('/error-sound.wav');
-      errorAudio.play().catch(err => console.log('音频播放失败:', err));
+      playSFX('/error-sound.wav');
 
       setErrorMessage("网络错误，请稍后重试");
       setError(true);
