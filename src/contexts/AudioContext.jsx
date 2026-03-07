@@ -11,8 +11,9 @@ export function AudioProvider({ children }) {
   const originalVolumeRef = useRef(0.3); // 保存 BGM 原始音量
   const isDuckingRef = useRef(false); // 是否正在降低音量
 
-  // 音效池 - 预加载音效
+  // 音效池 - 每个音效创建 3 个实例
   const sfxPoolRef = useRef({});
+  const POOL_SIZE = 3;
 
   useEffect(() => {
     // 创建单例音频实例
@@ -21,7 +22,7 @@ export function AudioProvider({ children }) {
     audio.volume = 0; // 初始音量为 0，用于 fade-in
     audioRef.current = audio;
 
-    // 预加载音效到池中
+    // 预加载音效池 - 每个音效创建多个实例
     const sfxFiles = {
       'option': '/option-sound.wav',
       'error': '/error-sound.wav',
@@ -32,11 +33,15 @@ export function AudioProvider({ children }) {
     };
 
     Object.entries(sfxFiles).forEach(([key, src]) => {
-      const sfx = new Audio(src);
-      sfx.preload = 'auto';
-      sfx.volume = 0.7;
-      sfx.load();
-      sfxPoolRef.current[key] = sfx;
+      const pool = [];
+      for (let i = 0; i < POOL_SIZE; i++) {
+        const sfx = new Audio(src);
+        sfx.preload = 'auto';
+        sfx.volume = 0.7;
+        sfx.load();
+        pool.push(sfx);
+      }
+      sfxPoolRef.current[key] = pool;
     });
 
     // 监听音频事件
@@ -211,11 +216,26 @@ export function AudioProvider({ children }) {
     }, stepDuration);
   };
 
-  // 播放音效（带 BGM ducking）- 使用预加载的音效池
+  // 获取可用的音效实例
+  const getAvailableAudio = (sfxName) => {
+    const pool = sfxPoolRef.current[sfxName];
+    if (!pool) return null;
+
+    // 找到第一个未在播放的实例
+    const available = pool.find(audio => audio.paused || audio.ended);
+    if (available) {
+      return available;
+    }
+
+    // 如果都在播放，返回第一个（会被重置）
+    return pool[0];
+  };
+
+  // 播放音效（带 BGM ducking）- 使用音频池
   const playSFX = (src) => {
     // 从路径提取音效名称
     const sfxName = src.split('/').pop().replace('-sound.wav', '').replace('.wav', '');
-    const sfxAudio = sfxPoolRef.current[sfxName];
+    const sfxAudio = getAvailableAudio(sfxName);
 
     if (!sfxAudio) {
       console.log('音效未找到:', sfxName);
@@ -230,19 +250,15 @@ export function AudioProvider({ children }) {
 
     // 异步降低 BGM 音量（不阻塞音效）
     if (isPlaying) {
-      requestAnimationFrame(() => {
-        duckBGM(0.15, 50);
-      });
+      duckBGM(0.15, 50);
     }
 
-    // 设置音效结束回调
-    sfxAudio.onended = () => {
+    // 设置音效结束回调（使用 once 避免重复绑定）
+    sfxAudio.addEventListener('ended', () => {
       if (isPlaying) {
-        requestAnimationFrame(() => {
-          setTimeout(() => restoreBGM(100), 10);
-        });
+        setTimeout(() => restoreBGM(100), 10);
       }
-    };
+    }, { once: true });
   };
 
   const value = {
