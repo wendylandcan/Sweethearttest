@@ -14,7 +14,8 @@ export default function QuizPage({ onComplete }) {
   const [direction, setDirection] = useState(1);
   const [selected, setSelected] = useState(null);
   const [isAnimating, setIsAnimating] = useState(false);
-  const hasPlayedStressSoundRef = useRef(false); // 改用 ref 追踪是否已播放
+  const hasPlayedStressSoundRef = useRef(false); // 改用 ref 追踪是否已播放音效
+  const [hasAnsweredFirstHighPressure, setHasAnsweredFirstHighPressure] = useState(false); // 追踪是否已回答第一道高压题
   const { playSFX } = useAudio(); // 获取音效播放方法
 
   // 强制应用可爱字体到整个页面
@@ -50,6 +51,11 @@ export default function QuizPage({ onComplete }) {
     setSelected(optionIdx);
     setDirection(1);
     setIsAnimating(true);
+
+    // 如果当前是高压题且还没回答过第一道高压题，标记为已回答
+    if (isHighPressure && !hasAnsweredFirstHighPressure) {
+      setHasAnsweredFirstHighPressure(true);
+    }
 
     const newAnswers = [...answers, QUESTIONS[currentIdx].options[optionIdx]];
 
