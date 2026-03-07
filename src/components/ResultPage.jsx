@@ -248,41 +248,187 @@ export default function ResultPage({ match, scores, onRetry }) {
     setSaving(true);
     try {
       console.log('开始生成海报...');
-      console.log('posterAreaRef.current:', posterAreaRef.current);
 
-      // 检查 ref 是否存在
-      if (!posterAreaRef.current) {
-        throw new Error('海报区域引用不存在，请刷新页面重试');
+      // 1. 创建 Canvas
+      const canvas = document.createElement('canvas');
+      const width = 750; // 2倍分辨率
+      const height = 2400; // 根据内容调整
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+
+      // 2. 绘制背景
+      const gradient = ctx.createLinearGradient(0, 0, 0, height);
+      gradient.addColorStop(0, hexToRgba(themeColor, 0.13));
+      gradient.addColorStop(0.6, '#fffaf5');
+      gradient.addColorStop(1, '#ffffff');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+
+      let y = 80; // 当前绘制位置
+
+      // 3. 绘制标题
+      ctx.textAlign = 'center';
+      ctx.font = '22px "ZCOOL KuaiLe", "Fredoka", "Noto Sans SC", sans-serif';
+      ctx.fillStyle = 'rgba(94, 59, 37, 0.5)';
+      ctx.fillText('圣夜学园 · 心灵之蛋', width / 2, y);
+      y += 40;
+
+      ctx.font = '26px "ZCOOL KuaiLe", "Fredoka", "Noto Sans SC", sans-serif';
+      ctx.fillStyle = 'rgba(94, 59, 37, 0.7)';
+      ctx.fillText('你的守护甜心是', width / 2, y);
+      y += 60;
+
+      // 4. 绘制人物名称（带描边）
+      ctx.font = 'bold 64px "ZCOOL KuaiLe", "Fredoka", "Noto Sans SC", sans-serif';
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 8;
+      ctx.strokeText(nameZh, width / 2, y);
+      ctx.fillStyle = themeColor;
+      ctx.fillText(nameZh, width / 2, y);
+      y += 50;
+
+      if (nameEn) {
+        ctx.font = 'bold 24px "Nunito", sans-serif';
+        ctx.fillStyle = hexToRgba(themeColor, 0.7);
+        ctx.fillText(nameEn.toUpperCase(), width / 2, y);
+        y += 50;
       }
 
-      console.log('使用 dom-to-image 生成海报...');
-      const domtoimage = (await import("dom-to-image-more")).default;
+      // 5. 加载并绘制立绘
+      try {
+        const img = await new Promise((resolve, reject) => {
+          const image = new Image();
+          image.crossOrigin = 'anonymous';
+          image.onload = () => resolve(image);
+          image.onerror = reject;
+          image.src = guardianImageUrl;
+          setTimeout(reject, 5000);
+        });
 
-      // 使用 dom-to-image-more 生成图片（更好的跨域支持）
-      const dataUrl = await domtoimage.toJpeg(posterAreaRef.current, {
-        quality: 0.92,
-        bgcolor: '#FFFFFF',
-        style: {
-          transform: 'scale(1)',
-          transformOrigin: 'top left'
-        },
-        filter: (node) => {
-          // 过滤掉光晕元素
-          if (node.classList) {
-            return !node.classList.contains('result-char-name-glow') &&
-                   !node.classList.contains('char-name-glow') &&
-                   !node.classList.contains('soul-catalog-title-glow') &&
-                   !node.classList.contains('guardian-glow') &&
-                   !node.classList.contains('card-sparkles') &&
-                   !node.classList.contains('star-field');
-          }
-          return true;
+        const imgWidth = 400;
+        const imgHeight = (img.height / img.width) * imgWidth;
+        ctx.drawImage(img, (width - imgWidth) / 2, y, imgWidth, imgHeight);
+        y += imgHeight + 40;
+      } catch (e) {
+        console.error('立绘加载失败:', e);
+        y += 300; // 预留空间
+      }
+
+      // 6. 绘制关键词
+      ctx.font = 'bold 26px "ZCOOL KuaiLe", "Fredoka", "Noto Sans SC", sans-serif';
+      ctx.strokeStyle = themeColor;
+      ctx.lineWidth = 4;
+      ctx.fillStyle = 'transparent';
+      const keywordText = `✦ ${match.keyword} ✦`;
+      const keywordWidth = ctx.measureText(keywordText).width;
+      const keywordX = (width - keywordWidth) / 2;
+
+      // 绘制边框
+      ctx.beginPath();
+      ctx.roundRect(keywordX - 20, y - 30, keywordWidth + 40, 50, 25);
+      ctx.stroke();
+
+      ctx.fillStyle = themeColor;
+      ctx.fillText(keywordText, width / 2, y);
+      y += 70;
+
+      // 7. 绘制口号
+      ctx.font = '26px "ZCOOL KuaiLe", "Fredoka", "Noto Sans SC", sans-serif';
+      ctx.fillStyle = hexToRgba(themeColor, 0.9);
+      const taglineLines = wrapText(ctx, match.tagline, width - 120);
+      taglineLines.forEach(line => {
+        ctx.fillText(line, width / 2, y);
+        y += 40;
+      });
+      y += 40;
+
+      // 8. 绘制雷达图
+      const radarCanvas = posterAreaRef.current?.querySelector('canvas');
+      if (radarCanvas) {
+        try {
+          const radarSize = 480;
+          ctx.drawImage(radarCanvas, (width - radarSize) / 2, y, radarSize, radarSize);
+          y += radarSize + 60;
+        } catch (e) {
+          console.error('雷达图绘制失败:', e);
+          y += 480;
         }
+      }
+
+      // 9. 绘制灵魂图鉴标题
+      ctx.font = 'bold 32px "ZCOOL KuaiLe", "Fredoka", "Noto Sans SC", sans-serif';
+      ctx.fillStyle = themeColor;
+      ctx.fillText('◆ 灵魂图鉴', width / 2, y);
+      y += 50;
+
+      // 10. 绘制灵魂图鉴内容
+      const soulSections = [
+        { label: "灵魂底色", text: match.soulColor, icon: "◇" },
+        { label: "天赋魔法", text: match.magicGift, icon: "✧" },
+        { label: "暗影陷阱", text: match.shadowTrap, icon: "◆" },
+        ...(match.letter ? [{ label: "破壳寄语", text: match.letter, icon: "♡" }] : []),
+      ];
+
+      ctx.textAlign = 'left';
+      soulSections.forEach(({ label, text, icon }) => {
+        // 绘制背景框
+        ctx.fillStyle = hexToRgba(themeColor, 0.07);
+        ctx.fillRect(60, y - 30, width - 120, 100);
+
+        // 绘制左边框
+        ctx.fillStyle = themeColor;
+        ctx.fillRect(60, y - 30, 6, 100);
+
+        // 绘制标题
+        ctx.font = 'bold 26px "ZCOOL KuaiLe", "Fredoka", "Noto Sans SC", sans-serif';
+        ctx.fillStyle = themeColor;
+        ctx.fillText(`${icon} ${label}`, 80, y);
+
+        // 绘制内容
+        ctx.font = '24px "ZCOOL KuaiLe", "Fredoka", "Noto Sans SC", sans-serif';
+        ctx.fillStyle = 'rgba(94, 59, 37, 0.8)';
+        const lines = wrapText(ctx, text, width - 160);
+        lines.forEach((line, i) => {
+          ctx.fillText(line, 80, y + 35 + i * 32);
+        });
+
+        y += 120;
       });
 
-      console.log('图片生成成功');
+      // 11. 绘制社交磁场（如果有）
+      if (social && (fatedChar || avoidChar)) {
+        y += 20;
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 32px "ZCOOL KuaiLe", "Fredoka", "Noto Sans SC", sans-serif';
+        ctx.fillStyle = themeColor;
+        ctx.fillText('◆ 社交磁场', width / 2, y);
+        y += 50;
 
-      // 显示模态框供用户长按保存
+        ctx.textAlign = 'left';
+        if (fatedChar && social.fatedDesc) {
+          drawSocialCard(ctx, fatedChar, social.fatedDesc, '宿命契合', 60, y, width - 120);
+          y += 140;
+        }
+
+        if (avoidChar && social.avoidDesc) {
+          drawSocialCard(ctx, avoidChar, social.avoidDesc, '绝对避雷', 60, y, width - 120);
+          y += 140;
+        }
+      }
+
+      // 12. 绘制水印
+      y += 40;
+      ctx.textAlign = 'center';
+      ctx.font = '20px "Fredoka", "Quicksand", sans-serif';
+      ctx.fillStyle = 'rgba(94, 59, 37, 0.4)';
+      ctx.fillText('圣夜学园 · 心灵之蛋 · Project Humpty-Lock', width / 2, y);
+
+      // 13. 转换为图片
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+      console.log('海报生成成功');
+
+      // 14. 显示模态框
       setGeneratedImage(dataUrl);
       setShowModal(true);
       setSaved(true);
@@ -292,6 +438,59 @@ export default function ResultPage({ match, scores, onRetry }) {
     } finally {
       setSaving(false);
     }
+  };
+
+  // 辅助函数：文字换行
+  const wrapText = (ctx, text, maxWidth) => {
+    const words = text.split('');
+    const lines = [];
+    let currentLine = '';
+
+    words.forEach(word => {
+      const testLine = currentLine + word;
+      const metrics = ctx.measureText(testLine);
+      if (metrics.width > maxWidth && currentLine !== '') {
+        lines.push(currentLine);
+        currentLine = word;
+      } else {
+        currentLine = testLine;
+      }
+    });
+    lines.push(currentLine);
+    return lines;
+  };
+
+  // 辅助函数：绘制社交卡片
+  const drawSocialCard = (ctx, char, desc, label, x, y, cardWidth) => {
+    const charColor = char.themeColor || char.color;
+
+    // 背景
+    ctx.fillStyle = hexToRgba(charColor, 0.08);
+    ctx.fillRect(x, y, cardWidth, 120);
+
+    // 边框
+    ctx.strokeStyle = hexToRgba(charColor, 0.4);
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, cardWidth, 120);
+
+    // 标签
+    ctx.font = 'bold 24px "ZCOOL KuaiLe", "Fredoka", "Noto Sans SC", sans-serif';
+    ctx.fillStyle = charColor;
+    ctx.fillText(label, x + 20, y + 35);
+
+    // 名字
+    ctx.font = 'bold 28px "ZCOOL KuaiLe", "Fredoka", "Noto Sans SC", sans-serif';
+    ctx.fillText(char.name.split('(')[0].trim(), x + 20, y + 70);
+
+    // 描述
+    ctx.font = '22px "ZCOOL KuaiLe", "Fredoka", "Noto Sans SC", sans-serif';
+    ctx.fillStyle = hexToRgba(charColor, 0.88);
+    const descLines = wrapText(ctx, desc, cardWidth - 40);
+    descLines.forEach((line, i) => {
+      if (i < 1) { // 只显示第一行
+        ctx.fillText(line, x + 20, y + 100);
+      }
+    });
   };
 
   return (
