@@ -248,15 +248,17 @@ export default function ResultPage({ match, scores, onRetry }) {
     try {
       const html2canvas = (await import("html2canvas")).default;
 
-      // 执行截图，使用 onclone 回调进行底层重构
+      // 执行截图，降低 scale 提升性能
       const originalCanvas = await html2canvas(resultRef.current, {
         backgroundColor: "#FFFFFF",
-        scale: 3,
+        scale: 2, // 降低到 2 提升性能
         useCORS: true,
         allowTaint: true,
         logging: false,
         scrollX: 0,
-        scrollY: 0,
+        scrollY: -window.scrollY, // 修复滚动问题
+        windowWidth: document.documentElement.scrollWidth,
+        windowHeight: document.documentElement.scrollHeight,
         onclone: (clonedDoc) => {
           // 1. 彻底禁用所有光晕元素
           const glowElements = clonedDoc.querySelectorAll('.result-char-name-glow, .char-name-glow, .soul-catalog-title-glow, .guardian-glow');
@@ -268,10 +270,8 @@ export default function ResultPage({ match, scores, onRetry }) {
           // 2. 禁用所有名字的 text-shadow 和 box-shadow
           const nameElements = clonedDoc.querySelectorAll('.result-char-name-zh, .social-card-name, .soul-catalog-title');
           nameElements.forEach(el => {
-            // 移除模糊阴影，保留描边
             const shadows = el.style.textShadow || '';
             if (shadows.includes('blur') || shadows.includes('px')) {
-              // 只保留描边效果（无模糊的阴影）
               el.style.textShadow = `
                 -2px -2px 0 #fff,
                 2px -2px 0 #fff,
@@ -299,7 +299,7 @@ export default function ResultPage({ match, scores, onRetry }) {
           `;
           clonedDoc.head.appendChild(style);
 
-          // 4. 修复白边与圆角（使用 box-shadow 替代 border）
+          // 4. 修复白边与圆角
           const posterArea = clonedDoc.querySelector('.poster-area');
           if (posterArea) {
             posterArea.style.borderRadius = '32px';
@@ -310,75 +310,36 @@ export default function ResultPage({ match, scores, onRetry }) {
         }
       });
 
-      // 5. 创建增强 Canvas（禁用透明通道）
+      // 创建增强 Canvas
       const enhancedCanvas = document.createElement('canvas');
       enhancedCanvas.width = originalCanvas.width;
       enhancedCanvas.height = originalCanvas.height;
       const ctx = enhancedCanvas.getContext('2d', {
         alpha: false,
-        imageSmoothingEnabled: false
+        imageSmoothingEnabled: true,
+        imageSmoothingQuality: 'high'
       });
 
-      // 6. 显式底色填充（纯白不透明）
+      // 显式底色填充
       ctx.fillStyle = '#FFFFFF';
       ctx.fillRect(0, 0, enhancedCanvas.width, enhancedCanvas.height);
 
-      // 7. 应用硬件加速滤镜并绘制
-      ctx.filter = 'saturate(1.25) contrast(1.08) brightness(1.02)';
+      // 应用滤镜并绘制
+      ctx.filter = 'saturate(1.2) contrast(1.05) brightness(1.01)';
       ctx.drawImage(originalCanvas, 0, 0);
       ctx.filter = 'none';
 
-      // 8. 检测是否为移动端
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      // 导出为 JPEG
+      const dataUrl = enhancedCanvas.toDataURL('image/jpeg', 0.92);
 
-      if (isMobile) {
-        // 移动端：转换为 Blob 并尝试使用 Share API
-        enhancedCanvas.toBlob(async (blob) => {
-          if (!blob) {
-            alert('生成图片失败，请重试');
-            setSaving(false);
-            return;
-          }
-
-          // 尝试使用 Web Share API（iOS/Android 原生分享）
-          if (navigator.share && navigator.canShare) {
-            try {
-              const file = new File([blob], 'my-guardian-sweetheart.jpg', { type: 'image/jpeg' });
-              if (navigator.canShare({ files: [file] })) {
-                await navigator.share({
-                  files: [file],
-                  title: '我的守护甜心',
-                  text: '来自圣夜学园的心灵之蛋测验'
-                });
-                setSaved(true);
-                setSaving(false);
-                return;
-              }
-            } catch (err) {
-              console.log('Share API 失败，使用备用方案:', err);
-            }
-          }
-
-          // 备用方案：显示图片供长按保存
-          const dataUrl = URL.createObjectURL(blob);
-          setGeneratedImage(dataUrl);
-          setShowModal(true);
-          setSaved(true);
-          setSaving(false);
-        }, 'image/jpeg', 0.95);
-      } else {
-        // 桌面端：直接下载
-        const dataUrl = enhancedCanvas.toDataURL('image/jpeg', 0.95);
-        const link = document.createElement('a');
-        link.download = 'my-guardian-sweetheart.jpg';
-        link.href = dataUrl;
-        link.click();
-        setSaved(true);
-        setSaving(false);
-      }
+      // 显示模态框供用户长按保存
+      setGeneratedImage(dataUrl);
+      setShowModal(true);
+      setSaved(true);
     } catch (e) {
       console.error('保存海报失败:', e);
-      alert('保存失败，请重试');
+      alert(`保存失败: ${e.message}`);
+    } finally {
       setSaving(false);
     }
   };
