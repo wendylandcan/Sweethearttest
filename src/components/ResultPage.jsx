@@ -260,10 +260,12 @@ export default function ResultPage({ match, scores, onRetry }) {
       if (radarCanvas) {
         try {
           radarImageData = radarCanvas.toDataURL('image/png');
-          console.log('雷达图转换成功');
+          console.log('雷达图转换成功，数据长度:', radarImageData.length);
         } catch (e) {
           console.error('雷达图转换失败:', e);
         }
+      } else {
+        console.warn('未找到雷达图 Canvas');
       }
 
       // 3. 创建隐藏的海报模板
@@ -273,16 +275,17 @@ export default function ResultPage({ match, scores, onRetry }) {
         left: -9999px;
         top: 0;
         width: 375px;
-        max-height: 10000px;
+        min-height: 800px;
         background: linear-gradient(180deg, ${hexToRgba(themeColor, 0.13)} 0%, #fffaf5 60%, #ffffff 100%);
         font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;
         padding: 30px 20px;
         box-sizing: border-box;
+        overflow: visible;
       `;
 
       // 4. 构建海报内容
       posterTemplate.innerHTML = `
-        <div style="text-align: center;">
+        <div style="text-align: center; width: 100%;">
           <!-- 标题 -->
           <p style="font-size: 11px; color: rgba(94, 59, 37, 0.5); margin: 0 0 10px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif; font-weight: 400;">
             圣夜学园 · 心灵之蛋
@@ -297,15 +300,16 @@ export default function ResultPage({ match, scores, onRetry }) {
           </h1>
           ${nameEn ? `<p style="font-size: 12px; font-weight: 700; color: ${hexToRgba(themeColor, 0.7)}; margin: 0 0 20px 0; font-family: 'Nunito', sans-serif; letter-spacing: 0.18em;">
             ${nameEn.toUpperCase()}
-          </p>` : ''}
+          </p>` : '<div style="height: 20px;"></div>'}
 
           <!-- 立绘 -->
-          <div style="margin: 20px 0; display: flex; justify-content: center;">
+          <div style="margin: 20px auto; display: flex; justify-content: center; width: 100%;">
             <img
+              class="poster-guardian-img"
               src="${guardianImageUrl}"
               alt="${match.name}"
               crossorigin="anonymous"
-              style="width: 200px; height: auto; display: block;"
+              style="width: 200px; height: auto; display: block; max-width: 100%;"
             />
           </div>
 
@@ -321,14 +325,15 @@ export default function ResultPage({ match, scores, onRetry }) {
 
           <!-- 雷达图 -->
           ${radarImageData ? `
-          <div style="margin: 20px 0; display: flex; justify-content: center;">
+          <div style="margin: 20px auto; display: flex; justify-content: center; width: 100%;">
             <img
+              class="poster-radar-img"
               src="${radarImageData}"
               alt="能力雷达图"
               style="width: 240px; height: 240px; display: block;"
             />
           </div>
-          ` : ''}
+          ` : '<div style="height: 240px; background: rgba(0,0,0,0.05); margin: 20px auto; width: 240px; display: flex; align-items: center; justify-content: center; color: rgba(0,0,0,0.3);">雷达图加载失败</div>'}
 
           <!-- 灵魂图鉴标题 -->
           <h3 style="font-size: 16px; font-weight: 700; color: ${themeColor}; margin: 25px 0 15px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
@@ -386,7 +391,7 @@ export default function ResultPage({ match, scores, onRetry }) {
           ` : ''}
 
           <!-- 水印 -->
-          <p style="font-size: 10px; color: rgba(94, 59, 37, 0.4); margin: 25px 0 0 0; font-family: 'Fredoka', 'Quicksand', sans-serif; font-weight: 300; letter-spacing: 0.15em;">
+          <p style="font-size: 10px; color: rgba(94, 59, 37, 0.4); margin: 25px 0 10px 0; font-family: 'Fredoka', 'Quicksand', sans-serif; font-weight: 300; letter-spacing: 0.15em;">
             圣夜学园 · 心灵之蛋 · Project Humpty-Lock
           </p>
         </div>
@@ -394,41 +399,64 @@ export default function ResultPage({ match, scores, onRetry }) {
 
       // 5. 添加到 DOM
       document.body.appendChild(posterTemplate);
+      console.log('海报模板已添加到 DOM');
 
       // 6. 等待所有图片加载完成
       const images = posterTemplate.querySelectorAll('img');
-      await Promise.all(
-        Array.from(images).map(img => {
-          if (img.complete) return Promise.resolve();
-          return new Promise((resolve, reject) => {
-            img.onload = resolve;
-            img.onerror = reject;
-            setTimeout(reject, 5000); // 5秒超时
-          });
-        })
-      );
+      console.log('找到图片数量:', images.length);
+
+      const imagePromises = Array.from(images).map((img, index) => {
+        if (img.complete && img.naturalHeight !== 0) {
+          console.log(`图片 ${index} 已加载`);
+          return Promise.resolve();
+        }
+        return new Promise((resolve, reject) => {
+          img.onload = () => {
+            console.log(`图片 ${index} 加载成功`);
+            resolve();
+          };
+          img.onerror = (e) => {
+            console.error(`图片 ${index} 加载失败:`, img.src, e);
+            resolve(); // 即使失败也继续
+          };
+          setTimeout(() => {
+            console.warn(`图片 ${index} 加载超时`);
+            resolve();
+          }, 5000);
+        });
+      });
+
+      await Promise.all(imagePromises);
       console.log('所有图片加载完成');
 
+      // 等待一小段时间确保渲染完成
+      await new Promise(resolve => setTimeout(resolve, 300));
+
       // 7. 动态导入 html2canvas
+      console.log('开始导入 html2canvas...');
       const html2canvas = (await import('html2canvas')).default;
+      console.log('html2canvas 导入成功');
 
       // 8. 生成海报
+      console.log('开始生成 canvas...');
       const canvas = await html2canvas(posterTemplate, {
         useCORS: true,
         scale: 3,
         allowTaint: false,
-        logging: false,
+        logging: true, // 开启日志
         width: 375,
         windowWidth: 375,
-        backgroundColor: null,
+        backgroundColor: '#ffffff',
       });
+      console.log('Canvas 生成成功，尺寸:', canvas.width, 'x', canvas.height);
 
       // 9. 转换为图片
       const dataUrl = canvas.toDataURL('image/png', 0.95);
-      console.log('海报生成成功');
+      console.log('海报生成成功，数据长度:', dataUrl.length);
 
       // 10. 移除模板
       document.body.removeChild(posterTemplate);
+      console.log('海报模板已移除');
 
       // 11. 显示模态框
       setGeneratedImage(dataUrl);
@@ -436,8 +464,9 @@ export default function ResultPage({ match, scores, onRetry }) {
       setSaved(true);
     } catch (e) {
       console.error('保存海报失败:', e);
+      console.error('错误堆栈:', e.stack);
       const errorMsg = e.message || '未知错误';
-      alert(`保存失败: ${errorMsg}\n\n请尝试：\n1. 刷新页面后重试\n2. 检查网络连接\n3. 清除浏览器缓存`);
+      alert(`保存失败: ${errorMsg}\n\n请尝试：\n1. 刷新页面后重试\n2. 检查网络连接\n3. 清除浏览器缓存\n\n技术信息：${e.stack?.split('\n')[0] || '无'}`);
     } finally {
       setSaving(false);
     }
