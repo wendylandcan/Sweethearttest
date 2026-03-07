@@ -182,14 +182,18 @@ export default function PreloadingPage({ onComplete }) {
       try {
         // 1. 加载音频 (0-40%)
         updateProgress(5);
-        const audioPromises = audioFiles.map(loadAudio);
-        await Promise.all(audioPromises);
-        updateProgress(40);
+        const audioCount = audioFiles.length;
+        for (let i = 0; i < audioCount; i++) {
+          await loadAudio(audioFiles[i]);
+          updateProgress(5 + Math.floor((i + 1) / audioCount * 35)); // 5% -> 40%
+        }
 
         // 2. 加载图片 (40-70%)
-        const imagePromises = imageFiles.map(loadImage);
-        await Promise.all(imagePromises);
-        updateProgress(70);
+        const imageCount = imageFiles.length;
+        for (let i = 0; i < imageCount; i++) {
+          await loadImage(imageFiles[i]);
+          updateProgress(40 + Math.floor((i + 1) / imageCount * 30)); // 40% -> 70%
+        }
 
         // 3. 加载字体 (70-85%)
         await loadFonts();

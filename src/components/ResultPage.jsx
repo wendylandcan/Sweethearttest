@@ -287,7 +287,7 @@ export default function ResultPage({ match, scores, onRetry }) {
           const radarCanvas = await html2canvasTemp(radarContainer, {
             useCORS: true,
             scale: 3, // 提高分辨率到 3 倍
-            backgroundColor: '#ffffff', // 白色背景
+            backgroundColor: null, // 透明背景
             logging: false,
           });
           radarImageData = radarCanvas.toDataURL('image/png');
@@ -393,7 +393,7 @@ export default function ResultPage({ match, scores, onRetry }) {
               灵魂图鉴
             </h3>
 
-            <div style="border-left: 3px solid ${themeColor}; background: ${hexToRgba(themeColor, 0.07)}; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px;">
+            <div style="border-left: 3px solid ${themeColor}; background: #ffffff; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px;">
               <h4 style="font-size: 14px; font-weight: 700; color: ${themeColor}; margin: 0 0 8px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
                 ◇ 灵魂底色
               </h4>
@@ -402,7 +402,7 @@ export default function ResultPage({ match, scores, onRetry }) {
               </p>
             </div>
 
-            <div style="border-left: 3px solid ${themeColor}; background: ${hexToRgba(themeColor, 0.07)}; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px;">
+            <div style="border-left: 3px solid ${themeColor}; background: #ffffff; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px;">
               <h4 style="font-size: 14px; font-weight: 700; color: ${themeColor}; margin: 0 0 8px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
                 ✧ 天赋魔法
               </h4>
@@ -411,7 +411,7 @@ export default function ResultPage({ match, scores, onRetry }) {
               </p>
             </div>
 
-            <div style="border-left: 3px solid ${themeColor}; background: ${hexToRgba(themeColor, 0.07)}; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px;">
+            <div style="border-left: 3px solid ${themeColor}; background: #ffffff; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px;">
               <h4 style="font-size: 14px; font-weight: 700; color: ${themeColor}; margin: 0 0 8px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
                 ◆ 暗影陷阱
               </h4>
@@ -421,7 +421,7 @@ export default function ResultPage({ match, scores, onRetry }) {
             </div>
 
             ${match.letter ? `
-              <div style="border-left: 3px solid ${themeColor}; background: ${hexToRgba(themeColor, 0.07)}; padding: 12px 16px; border-radius: 8px;">
+              <div style="border-left: 3px solid ${themeColor}; background: #ffffff; padding: 12px 16px; border-radius: 8px;">
                 <h4 style="font-size: 14px; font-weight: 700; color: ${themeColor}; margin: 0 0 8px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
                   ♡ 破壳寄语
                 </h4>
@@ -440,7 +440,7 @@ export default function ResultPage({ match, scores, onRetry }) {
               </h3>
 
               ${fatedChar && social.fatedDesc ? `
-                <div style="background: ${(fatedChar.themeColor || fatedChar.color)}18; border: 1.5px solid ${hexToRgba(fatedChar.themeColor || fatedChar.color, 0.4)}; border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+                <div style="background: #ffffff; border: 1.5px solid ${hexToRgba(fatedChar.themeColor || fatedChar.color, 0.4)}; border-radius: 12px; padding: 16px; margin-bottom: 12px;">
                   <h4 style="font-size: 13px; font-weight: 700; color: ${fatedChar.themeColor || fatedChar.color}; margin: 0 0 8px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
                     宿命契合
                   </h4>
@@ -454,7 +454,7 @@ export default function ResultPage({ match, scores, onRetry }) {
               ` : ''}
 
               ${avoidChar && social.avoidDesc ? `
-                <div style="background: ${(avoidChar.themeColor || avoidChar.color)}18; border: 1.5px solid ${hexToRgba(avoidChar.themeColor || avoidChar.color, 0.4)}; border-radius: 12px; padding: 16px;">
+                <div style="background: #ffffff; border: 1.5px solid ${hexToRgba(avoidChar.themeColor || avoidChar.color, 0.4)}; border-radius: 12px; padding: 16px;">
                   <h4 style="font-size: 13px; font-weight: 700; color: ${avoidChar.themeColor || avoidChar.color}; margin: 0 0 8px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
                     绝对避雷
                   </h4>
