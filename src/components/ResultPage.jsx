@@ -246,91 +246,31 @@ export default function ResultPage({ match, scores, onRetry }) {
 
     setSaving(true);
     try {
-      const html2canvas = (await import("html2canvas")).default;
+      const domtoimage = (await import("dom-to-image-more")).default;
 
-      // 执行截图 - 使用 allowTaint 允许本地图片
-      const originalCanvas = await html2canvas(resultRef.current, {
-        backgroundColor: "#FFFFFF",
-        scale: 2,
-        useCORS: false, // 本地图片不需要 CORS
-        allowTaint: true, // 允许污染画布
-        logging: false,
-        scrollX: 0,
-        scrollY: -window.scrollY,
-        windowWidth: document.documentElement.scrollWidth,
-        windowHeight: document.documentElement.scrollHeight,
-        onclone: (clonedDoc) => {
-          // 1. 彻底禁用所有光晕元素
-          const glowElements = clonedDoc.querySelectorAll('.result-char-name-glow, .char-name-glow, .soul-catalog-title-glow, .guardian-glow');
-          glowElements.forEach(el => {
-            el.style.display = 'none';
-            el.style.visibility = 'hidden';
-          });
-
-          // 2. 禁用所有名字的 text-shadow 和 box-shadow
-          const nameElements = clonedDoc.querySelectorAll('.result-char-name-zh, .social-card-name, .soul-catalog-title');
-          nameElements.forEach(el => {
-            const shadows = el.style.textShadow || '';
-            if (shadows.includes('blur') || shadows.includes('px')) {
-              el.style.textShadow = `
-                -2px -2px 0 #fff,
-                2px -2px 0 #fff,
-                -2px 2px 0 #fff,
-                2px 2px 0 #fff,
-                4px 4px 0 rgba(94, 59, 37, 0.15)
-              `;
-            }
-            el.style.boxShadow = 'none';
-          });
-
-          // 3. 强制移除所有伪元素的光晕
-          const style = clonedDoc.createElement('style');
-          style.textContent = `
-            .result-char-name-glow,
-            .char-name-glow,
-            .soul-catalog-title-glow,
-            .guardian-glow {
-              display: none !important;
-              visibility: hidden !important;
-            }
-            *::before, *::after {
-              filter: none !important;
-            }
-          `;
-          clonedDoc.head.appendChild(style);
-
-          // 4. 修复白边与圆角
-          const posterArea = clonedDoc.querySelector('.poster-area');
-          if (posterArea) {
-            posterArea.style.borderRadius = '32px';
-            posterArea.style.border = 'none';
-            posterArea.style.boxShadow = '0 0 0 4px #FFFFFF, 0 0 0 17px rgba(255, 255, 255, 0.95), 0 8px 0 #5E3B25, 0 32px 80px rgba(94, 59, 37, 0.35)';
-            posterArea.style.overflow = 'visible';
+      // 使用 dom-to-image 生成图片
+      const dataUrl = await domtoimage.toJpeg(resultRef.current, {
+        quality: 0.95,
+        bgcolor: '#FFFFFF',
+        width: resultRef.current.offsetWidth * 2,
+        height: resultRef.current.offsetHeight * 2,
+        style: {
+          transform: 'scale(2)',
+          transformOrigin: 'top left',
+          width: resultRef.current.offsetWidth + 'px',
+          height: resultRef.current.offsetHeight + 'px'
+        },
+        filter: (node) => {
+          // 过滤掉光晕元素
+          if (node.classList) {
+            return !node.classList.contains('result-char-name-glow') &&
+                   !node.classList.contains('char-name-glow') &&
+                   !node.classList.contains('soul-catalog-title-glow') &&
+                   !node.classList.contains('guardian-glow');
           }
+          return true;
         }
       });
-
-      // 创建增强 Canvas
-      const enhancedCanvas = document.createElement('canvas');
-      enhancedCanvas.width = originalCanvas.width;
-      enhancedCanvas.height = originalCanvas.height;
-      const ctx = enhancedCanvas.getContext('2d', {
-        alpha: false,
-        imageSmoothingEnabled: true,
-        imageSmoothingQuality: 'high'
-      });
-
-      // 显式底色填充
-      ctx.fillStyle = '#FFFFFF';
-      ctx.fillRect(0, 0, enhancedCanvas.width, enhancedCanvas.height);
-
-      // 应用滤镜并绘制
-      ctx.filter = 'saturate(1.2) contrast(1.05) brightness(1.01)';
-      ctx.drawImage(originalCanvas, 0, 0);
-      ctx.filter = 'none';
-
-      // 导出为 JPEG
-      const dataUrl = enhancedCanvas.toDataURL('image/jpeg', 0.92);
 
       // 显示模态框供用户长按保存
       setGeneratedImage(dataUrl);
@@ -338,7 +278,7 @@ export default function ResultPage({ match, scores, onRetry }) {
       setSaved(true);
     } catch (e) {
       console.error('保存海报失败:', e);
-      alert(`保存失败: ${e.message}\n\n请截图此页面或联系技术支持。`);
+      alert(`保存失败: ${e.message}\n\n请尝试刷新页面后重试。`);
     } finally {
       setSaving(false);
     }
