@@ -11,12 +11,33 @@ export function AudioProvider({ children }) {
   const originalVolumeRef = useRef(0.3); // 保存 BGM 原始音量
   const isDuckingRef = useRef(false); // 是否正在降低音量
 
+  // 音效池 - 预加载音效
+  const sfxPoolRef = useRef({});
+
   useEffect(() => {
     // 创建单例音频实例
     const audio = new Audio('/bgm.mp3');
     audio.loop = true;
     audio.volume = 0; // 初始音量为 0，用于 fade-in
     audioRef.current = audio;
+
+    // 预加载音效到池中
+    const sfxFiles = {
+      'option': '/option-sound.wav',
+      'error': '/error-sound.wav',
+      'success': '/success-sound.wav',
+      'start': '/start-sound.wav',
+      'result': '/result-sound.wav',
+      'poster': '/poster-sound.wav'
+    };
+
+    Object.entries(sfxFiles).forEach(([key, src]) => {
+      const sfx = new Audio(src);
+      sfx.preload = 'auto';
+      sfx.volume = 0.7;
+      sfx.load();
+      sfxPoolRef.current[key] = sfx;
+    });
 
     // 监听音频事件
     const handlePlay = () => setIsPlaying(true);
@@ -190,13 +211,19 @@ export function AudioProvider({ children }) {
     }, stepDuration);
   };
 
-  // 播放音效（带 BGM ducking）- 每次创建新的 Audio 实例
+  // 播放音效（带 BGM ducking）- 使用预加载的音效池
   const playSFX = (src) => {
-    // 每次创建新的音效实例，避免冲突
-    const sfxAudio = new Audio(src);
-    sfxAudio.volume = 0.7;
+    // 从路径提取音效名称
+    const sfxName = src.split('/').pop().replace('-sound.wav', '').replace('.wav', '');
+    const sfxAudio = sfxPoolRef.current[sfxName];
 
-    // 立即同步播放音效
+    if (!sfxAudio) {
+      console.log('音效未找到:', sfxName);
+      return;
+    }
+
+    // 重置音效到开始位置并立即播放
+    sfxAudio.currentTime = 0;
     sfxAudio.play().catch(err => {
       console.log('音效播放失败:', err);
     });
