@@ -245,7 +245,7 @@ export default function ResultPage({ match, scores, onRetry }) {
     // 播放保存海报音效
     playSFX('/poster-sound.wav');
 
-    if (!posterAreaRef.current || saving) return;
+    if (saving) return;
 
     setSaving(true);
     setSavingProgress('准备中...');
@@ -254,43 +254,107 @@ export default function ResultPage({ match, scores, onRetry }) {
       console.log('🎨 开始生成海报...');
 
       // 1. 等待字体加载
-      setSavingProgress('加载资源中...');
+      setSavingProgress('加载字体...');
       if (document.fonts && document.fonts.ready) {
         await document.fonts.ready;
         console.log('✅ 字体加载完成');
       }
 
-      // 2. 等待所有图片加载完成
-      const images = posterAreaRef.current.querySelectorAll('img');
+      // 2. 转换雷达图为图片
+      setSavingProgress('转换雷达图...');
+      const radarCanvas = document.querySelector('.recharts-surface');
+      let radarImageData = '';
+      if (radarCanvas) {
+        try {
+          // 创建临时 canvas 来转换 SVG
+          const svgElement = radarCanvas;
+          const svgData = new XMLSerializer().serializeToString(svgElement);
+          const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+          const url = URL.createObjectURL(svgBlob);
+
+          const img = new Image();
+          await new Promise((resolve, reject) => {
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              canvas.width = svgElement.width.baseVal.value * 2;
+              canvas.height = svgElement.height.baseVal.value * 2;
+              const ctx = canvas.getContext('2d');
+              ctx.scale(2, 2);
+              ctx.drawImage(img, 0, 0);
+              radarImageData = canvas.toDataURL('image/png');
+              URL.revokeObjectURL(url);
+              resolve();
+            };
+            img.onerror = reject;
+            img.src = url;
+          });
+          console.log('✅ 雷达图转换成功');
+        } catch (e) {
+          console.error('❌ 雷达图转换失败:', e);
+        }
+      }
+
+      // 3. 创建隐藏的海报模板
+      setSavingProgress('构建海报...');
+      const posterTemplate = document.createElement('div');
+      posterTemplate.style.cssText = `
+        position: fixed;
+        left: -9999px;
+        top: 0;
+        width: 375px;
+        background: linear-gradient(180deg, ${themeColor}22 0%, #fffaf5 60%, #ffffff 100%);
+        font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;
+        padding: 0;
+        box-sizing: border-box;
+        overflow: visible;
+      `;
+
+      // 4. 构建海报内容（复制 posterAreaRef 的 HTML）
+      const posterContent = posterAreaRef.current.cloneNode(true);
+
+      // 替换雷达图为图片
+      if (radarImageData) {
+        const radarContainer = posterContent.querySelector('.radar-container');
+        if (radarContainer) {
+          radarContainer.innerHTML = `
+            <img
+              src="${radarImageData}"
+              alt="能力雷达图"
+              style="width: 240px; height: 240px; display: block; margin: 0 auto;"
+            />
+          `;
+        }
+      }
+
+      // 移除不需要的元素
+      const starField = posterContent.querySelector('.star-field');
+      if (starField) starField.remove();
+
+      posterTemplate.appendChild(posterContent);
+
+      // 5. 添加到 DOM
+      document.body.appendChild(posterTemplate);
+      console.log('✅ 海报模板已添加到 DOM');
+
+      // 6. 等待所有图片加载完成
+      setSavingProgress('加载图片...');
+      const images = posterTemplate.querySelectorAll('img');
       console.log(`📷 找到 ${images.length} 张图片`);
 
       await Promise.all(
         Array.from(images).map((img, index) => {
-          const htmlImg = img;
-
-          // 检查图片状态
-          console.log(`图片 ${index + 1}:`, {
-            src: htmlImg.src,
-            complete: htmlImg.complete,
-            naturalWidth: htmlImg.naturalWidth,
-            naturalHeight: htmlImg.naturalHeight
-          });
-
-          // 已加载完成
-          if (htmlImg.complete && htmlImg.naturalWidth > 0) {
+          if (img.complete && img.naturalHeight !== 0) {
             console.log(`✅ 图片 ${index + 1} 已加载`);
             return Promise.resolve();
           }
-
-          // 等待加载
           return new Promise((resolve) => {
-            htmlImg.onload = () => {
+            img.onload = () => {
               console.log(`✅ 图片 ${index + 1} 加载成功`);
               resolve();
             };
-            htmlImg.onerror = (e) => {
-              console.error(`❌ 图片 ${index + 1} 加载失败:`, htmlImg.src, e);
-              resolve(); // 即使失败也继续
+            img.onerror = (e) => {
+              console.error(`❌ 图片 ${index + 1} 加载失败:`, img.src, e);
+              resolve();
             };
             setTimeout(() => {
               console.warn(`⚠️  图片 ${index + 1} 加载超时`);
@@ -301,49 +365,49 @@ export default function ResultPage({ match, scores, onRetry }) {
       );
       console.log('✅ 所有图片加载完成');
 
-      // 3. 额外等待 500ms 确保渲染完成
-      setSavingProgress('渲染海报中...');
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // 7. 等待渲染完成
+      await new Promise(resolve => setTimeout(resolve, 300));
 
-      // 4. 获取完整尺寸（使用 scrollHeight）
-      const actualHeight = posterAreaRef.current.scrollHeight;
-      const actualWidth = posterAreaRef.current.offsetWidth;
-      console.log('📐 海报尺寸:', actualWidth, 'x', actualHeight);
+      // 8. 获取实际高度
+      const templateHeight = posterTemplate.offsetHeight;
+      console.log('📏 模板实际高度:', templateHeight);
 
-      // 5. 动态导入 modern-screenshot
-      console.log('📦 导入 modern-screenshot...');
-      const { domToPng } = await import('modern-screenshot');
-      console.log('✅ modern-screenshot 导入成功');
+      // 9. 动态导入 html2canvas
+      setSavingProgress('生成海报...');
+      const html2canvas = (await import('html2canvas')).default;
+      console.log('✅ html2canvas 导入成功');
 
-      // 6. 生成海报
-      console.log('📸 开始生成图片...');
-      const dataUrl = await domToPng(posterAreaRef.current, {
-        quality: 1,           // 最高质量
-        scale: 2,             // 2倍分辨率（足够清晰）
-        width: actualWidth,
-        height: actualHeight, // 使用完整高度
+      // 10. 生成海报
+      console.log('📸 开始生成 canvas...');
+      const canvas = await html2canvas(posterTemplate, {
+        useCORS: true,
+        scale: 3,
+        allowTaint: false,
+        logging: false,
+        width: 375,
+        height: templateHeight,
+        windowWidth: 375,
+        windowHeight: templateHeight,
         backgroundColor: '#ffffff',
-        filter: (node) => {
-          // 过滤掉不需要的元素
-          if (node.classList?.contains('star-field')) {
-            return false; // 不截取背景星星
-          }
-          return true;
-        }
       });
+      console.log('✅ Canvas 生成成功，尺寸:', canvas.width, 'x', canvas.height);
 
-      console.log('✅ 图片生成完成，大小:', dataUrl.length, 'bytes');
+      // 11. 转换为图片
+      const dataUrl = canvas.toDataURL('image/png', 0.95);
+      console.log('✅ 海报生成成功，数据长度:', dataUrl.length);
 
-      // 7. 显示模态框
+      // 12. 清理 DOM
+      document.body.removeChild(posterTemplate);
+      console.log('✅ 海报模板已移除');
+
+      // 13. 显示海报
       setGeneratedImage(dataUrl);
       setShowModal(true);
       setSaved(true);
 
     } catch (e) {
       console.error('❌ 保存海报失败:', e);
-      console.error('错误堆栈:', e.stack);
-      const errorMsg = e.message || '未知错误';
-      alert(`保存失败: ${errorMsg}\n\n请尝试：\n1. 刷新页面后重试\n2. 检查网络连接\n3. 清除浏览器缓存\n\n技术信息：${e.stack?.split('\n')[0] || '无'}`);
+      alert(`保存失败: ${e.message}\n\n请尝试：\n1. 刷新页面后重试\n2. 检查网络连接\n3. 清除浏览器缓存`);
     } finally {
       setSaving(false);
       setSavingProgress('');
