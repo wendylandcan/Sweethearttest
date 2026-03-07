@@ -899,33 +899,36 @@ export default function ResultPage({ match, scores, onRetry }) {
             ✨ 长按下方图片保存到相册
           </p>
 
-          {/* 生成的图片 */}
-          <img
-            src={generatedImage}
-            alt="我的守护甜心海报"
+          {/* 生成的图片 - 使用容器限制高度 */}
+          <div
             style={{
               maxWidth: '85%',
-              maxHeight: '75%',
+              maxHeight: '65vh', // 限制最大高度为视口的 65%
               width: 'auto',
               height: 'auto',
               borderRadius: '12px',
               boxShadow: '0 0 30px rgba(0, 0, 0, 0.5), 0 0 60px rgba(139, 127, 212, 0.3)',
-              display: 'block',
-              objectFit: 'contain',
-              WebkitTouchCallout: 'default',
-              userSelect: 'none',
+              overflow: 'hidden', // 隐藏溢出部分
               marginBottom: '24px',
-              // 移动端优化
-              '@media (max-width: 768px)': {
-                maxWidth: '90%',
-                maxHeight: '70%'
-              }
+              position: 'relative',
             }}
-            onContextMenu={(e) => {
-              // 允许右键菜单（桌面端保存）
-              return true;
-            }}
-          />
+          >
+            <img
+              src={generatedImage}
+              alt="我的守护甜心海报"
+              style={{
+                width: '100%',
+                height: 'auto',
+                display: 'block',
+                WebkitTouchCallout: 'default',
+                userSelect: 'none',
+              }}
+              onContextMenu={(e) => {
+                // 允许右键菜单（桌面端保存）
+                return true;
+              }}
+            />
+          </div>
 
           {/* 关闭按钮 */}
           <button

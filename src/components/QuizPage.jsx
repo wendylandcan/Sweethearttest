@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { QUESTIONS } from "../data/questions";
 import { calculateScores, findMatch } from "../utils/algorithm";
@@ -14,7 +14,7 @@ export default function QuizPage({ onComplete }) {
   const [direction, setDirection] = useState(1);
   const [selected, setSelected] = useState(null);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [hasAnsweredFirstHighPressure, setHasAnsweredFirstHighPressure] = useState(false);
+  const hasPlayedStressSoundRef = useRef(false); // 改用 ref 追踪是否已播放
   const { playSFX } = useAudio(); // 获取音效播放方法
 
   // 强制应用可爱字体到整个页面
@@ -25,11 +25,12 @@ export default function QuizPage({ onComplete }) {
   // 监听进入第一道高压题，播放音效
   useEffect(() => {
     const current = QUESTIONS[currentIdx];
-    if (current?.isHighPressure && !hasAnsweredFirstHighPressure) {
+    if (current?.isHighPressure && !hasPlayedStressSoundRef.current) {
       console.log('🔥 进入高压测试题，播放音效');
       playSFX('/stress-sound.wav');
+      hasPlayedStressSoundRef.current = true; // 标记已播放
     }
-  }, [currentIdx, hasAnsweredFirstHighPressure, playSFX]);
+  }, [currentIdx, playSFX]);
 
   const current = QUESTIONS[currentIdx];
   const isHighPressure = current?.isHighPressure;
@@ -49,11 +50,6 @@ export default function QuizPage({ onComplete }) {
     setSelected(optionIdx);
     setDirection(1);
     setIsAnimating(true);
-
-    // 检测是否是第一道高压题
-    if (isHighPressure && !hasAnsweredFirstHighPressure) {
-      setHasAnsweredFirstHighPressure(true);
-    }
 
     const newAnswers = [...answers, QUESTIONS[currentIdx].options[optionIdx]];
 
