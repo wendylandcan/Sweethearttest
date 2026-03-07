@@ -102,35 +102,15 @@ export function AudioProvider({ children }) {
         });
     }
 
-    // ✅ 修复 6: 改进音频解锁逻辑
+    // ✅ 修复 6: 改进音频解锁逻辑 - 移除自动解锁所有音频池
     const handleGlobalClick = () => {
-      if (!isAudioUnlocked) {
-        // 解锁所有音频实例
-        console.log('🔓 尝试解锁音频...');
-
-        // 播放静音音频激活所有实例（移动端必须）
-        Object.values(sfxPoolRef.current).forEach(pool => {
-          pool.forEach(audio => {
-            const originalVolume = audio.volume;
-            audio.volume = 0;
-            audio.play().then(() => {
-              audio.pause();
-              audio.currentTime = 0;
-              audio.volume = originalVolume;
-            }).catch(() => {});
-          });
-        });
-
-        setIsAudioUnlocked(true);
-        console.log('✅ 音频已解锁');
-      }
-
       if (pendingPlayRef.current && !isPlaying) {
         audio.play()
           .then(() => {
             console.log('✅ 全局点击触发播放成功');
             fadeIn(audio, 0.3, 2000);
             pendingPlayRef.current = false;
+            setIsAudioUnlocked(true);
           })
           .catch((err) => {
             console.log('❌ 播放失败:', err);
@@ -343,9 +323,14 @@ export function AudioProvider({ children }) {
           // 首次成功播放后标记音频已解锁
           if (!isAudioUnlocked) {
             setIsAudioUnlocked(true);
+            console.log('✅ 音频已通过音效播放解锁');
           }
         })
         .catch(err => {
+          // 如果是首次播放失败，尝试通过用户交互解锁
+          if (!isAudioUnlocked) {
+            console.log('⚠️  音效播放被阻止，需要用户交互解锁');
+          }
           // 静默处理播放失败，不影响用户体验
           if (isPlaying) {
             setTimeout(() => restoreBGM(50), 100);
