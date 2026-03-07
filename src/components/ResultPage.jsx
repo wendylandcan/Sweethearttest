@@ -246,17 +246,27 @@ export default function ResultPage({ match, scores, onRetry }) {
 
     setSaving(true);
     try {
+      // 预加载图片，确保跨域设置正确
+      const guardianImg = new Image();
+      guardianImg.crossOrigin = 'anonymous';
+      guardianImg.src = guardianImageUrl;
+
+      await new Promise((resolve, reject) => {
+        guardianImg.onload = resolve;
+        guardianImg.onerror = reject;
+      });
+
       const html2canvas = (await import("html2canvas")).default;
 
-      // 执行截图，降低 scale 提升性能
+      // 执行截图
       const originalCanvas = await html2canvas(resultRef.current, {
         backgroundColor: "#FFFFFF",
-        scale: 2, // 降低到 2 提升性能
+        scale: 2,
         useCORS: true,
-        allowTaint: true,
-        logging: false,
+        allowTaint: false, // 改为 false，严格跨域检查
+        logging: true, // 开启日志查看问题
         scrollX: 0,
-        scrollY: -window.scrollY, // 修复滚动问题
+        scrollY: -window.scrollY,
         windowWidth: document.documentElement.scrollWidth,
         windowHeight: document.documentElement.scrollHeight,
         onclone: (clonedDoc) => {
@@ -307,6 +317,12 @@ export default function ResultPage({ match, scores, onRetry }) {
             posterArea.style.boxShadow = '0 0 0 4px #FFFFFF, 0 0 0 17px rgba(255, 255, 255, 0.95), 0 8px 0 #5E3B25, 0 32px 80px rgba(94, 59, 37, 0.35)';
             posterArea.style.overflow = 'visible';
           }
+
+          // 5. 确保所有图片都有 crossOrigin 属性
+          const images = clonedDoc.querySelectorAll('img');
+          images.forEach(img => {
+            img.crossOrigin = 'anonymous';
+          });
         }
       });
 
@@ -338,7 +354,7 @@ export default function ResultPage({ match, scores, onRetry }) {
       setSaved(true);
     } catch (e) {
       console.error('保存海报失败:', e);
-      alert(`保存失败: ${e.message}`);
+      alert(`保存失败: ${e.message}\n\n请确保网络连接正常，然后重试。`);
     } finally {
       setSaving(false);
     }
@@ -449,7 +465,7 @@ export default function ResultPage({ match, scores, onRetry }) {
                 background: `radial-gradient(ellipse at center, ${hexToRgba(themeColor, 0.18)} 0%, transparent 72%)`,
               }}
             />
-            <img className="result-guardian-image" src={guardianImageUrl} alt={`${match.name} 守护甜心`} />
+            <img className="result-guardian-image" src={guardianImageUrl} alt={`${match.name} 守护甜心`} crossOrigin="anonymous" />
           </motion.div>
 
           {/* 关键词 + 口号：放在人物与六维表之间 */}
