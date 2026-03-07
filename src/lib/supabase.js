@@ -4,9 +4,29 @@ import { getDeviceId } from "./deviceId";
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 
+// 配置 Supabase 客户端以支持高并发
 export const supabase =
   supabaseUrl && supabaseAnonKey
-    ? createClient(supabaseUrl, supabaseAnonKey)
+    ? createClient(supabaseUrl, supabaseAnonKey, {
+        auth: {
+          persistSession: false, // 不持久化会话，减少存储开销
+          autoRefreshToken: false, // 不自动刷新 token
+        },
+        db: {
+          schema: 'public',
+        },
+        global: {
+          headers: {
+            'x-client-info': 'sweetheart-test',
+          },
+        },
+        // 连接池配置
+        realtime: {
+          params: {
+            eventsPerSecond: 10, // 限制事件频率
+          },
+        },
+      })
     : null;
 
 export async function saveResult({ characterId, scores, inviteCode }) {
