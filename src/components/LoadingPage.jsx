@@ -23,10 +23,13 @@ export default function LoadingPage({ onStart }) {
   const handleClick = () => {
     if (started) return;
 
+    console.log('🥚 点击蛋壳，开始测试');
+
     // 用户点击时尝试播放 BGM
     tryPlay();
 
     // 播放开始测试音效
+    console.log('🎵 播放开始音效');
     playSFX('/start-sound.wav');
 
     setStarted(true);

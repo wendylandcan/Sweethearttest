@@ -59,7 +59,9 @@ export default function PreloadingPage({ onComplete }) {
         '/error-sound.wav',
         '/success-sound.wav',
         '/start-sound.wav',
-        '/result-sound.wav'
+        '/result-sound.wav',
+        '/poster-sound.wav',
+        '/stress-sound.wav'
       ];
 
       const loadAudio = (src) => {
@@ -67,8 +69,30 @@ export default function PreloadingPage({ onComplete }) {
           const audio = new Audio();
           audio.preload = 'auto';
           audio.src = src;
-          audio.addEventListener('canplaythrough', () => resolve(), { once: true });
-          audio.addEventListener('error', () => resolve(), { once: true });
+
+          let resolved = false;
+          const handleResolve = () => {
+            if (!resolved) {
+              resolved = true;
+              console.log(`✅ 音频加载完成: ${src}`);
+              resolve();
+            }
+          };
+
+          audio.addEventListener('canplaythrough', handleResolve, { once: true });
+          audio.addEventListener('error', (e) => {
+            console.error(`❌ 音频加载失败: ${src}`, e);
+            handleResolve();
+          }, { once: true });
+
+          // 5秒超时
+          setTimeout(() => {
+            if (!resolved) {
+              console.warn(`⚠️  音频加载超时: ${src}`);
+              handleResolve();
+            }
+          }, 5000);
+
           audio.load();
         });
       };
@@ -76,14 +100,48 @@ export default function PreloadingPage({ onComplete }) {
       // 预加载图片
       const imageFiles = [
         '/egg-icon.svg',
-        ...Array.from({ length: 12 }, (_, i) => `/guardians/${i + 1}.png`)
+        '/guardians/SC01.png',
+        '/guardians/SC02.png',
+        '/guardians/SC03.png',
+        '/guardians/SC04.png',
+        '/guardians/SC05.png',
+        '/guardians/SC06.png',
+        '/guardians/SC07.png',
+        '/guardians/SC08.png',
+        '/guardians/SC09.png',
+        '/guardians/SC10.png',
+        '/guardians/SC11.png',
+        '/guardians/SC12.png'
       ];
 
       const loadImage = (src) => {
         return new Promise((resolve) => {
           const img = new Image();
-          img.onload = () => resolve();
-          img.onerror = () => resolve();
+          img.crossOrigin = 'anonymous'; // 设置跨域
+
+          let resolved = false;
+          const handleResolve = () => {
+            if (!resolved) {
+              resolved = true;
+              console.log(`✅ 图片加载完成: ${src}`);
+              resolve();
+            }
+          };
+
+          img.onload = handleResolve;
+          img.onerror = (e) => {
+            console.error(`❌ 图片加载失败: ${src}`, e);
+            handleResolve();
+          };
+
+          // 5秒超时
+          setTimeout(() => {
+            if (!resolved) {
+              console.warn(`⚠️  图片加载超时: ${src}`);
+              handleResolve();
+            }
+          }, 5000);
+
           img.src = src;
         });
       };
