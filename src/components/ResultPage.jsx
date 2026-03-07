@@ -246,33 +246,282 @@ export default function ResultPage({ match, scores, onRetry }) {
 
     setSaving(true);
     try {
-      const domtoimage = (await import("dom-to-image-more")).default;
+      // 1. 预加载立绘图片
+      const guardianImg = new Image();
+      guardianImg.crossOrigin = 'anonymous';
+      guardianImg.src = guardianImageUrl;
+      await new Promise((resolve, reject) => {
+        guardianImg.onload = resolve;
+        guardianImg.onerror = reject;
+        setTimeout(reject, 5000); // 5秒超时
+      });
 
-      // 使用 dom-to-image 生成图片
-      const dataUrl = await domtoimage.toJpeg(resultRef.current, {
-        quality: 0.95,
-        bgcolor: '#FFFFFF',
-        width: resultRef.current.offsetWidth * 2,
-        height: resultRef.current.offsetHeight * 2,
-        style: {
-          transform: 'scale(2)',
-          transformOrigin: 'top left',
-          width: resultRef.current.offsetWidth + 'px',
-          height: resultRef.current.offsetHeight + 'px'
-        },
-        filter: (node) => {
-          // 过滤掉光晕元素
-          if (node.classList) {
-            return !node.classList.contains('result-char-name-glow') &&
-                   !node.classList.contains('char-name-glow') &&
-                   !node.classList.contains('soul-catalog-title-glow') &&
-                   !node.classList.contains('guardian-glow');
+      // 2. 将雷达图 Canvas 转换为静态图片
+      const radarCanvas = document.querySelector('.radar-chart canvas');
+      let radarImageUrl = '';
+      if (radarCanvas) {
+        radarImageUrl = radarCanvas.toDataURL('image/png');
+      }
+
+      // 3. 创建静态渲染容器（不可见）
+      const posterContainer = document.createElement('div');
+      posterContainer.style.position = 'fixed';
+      posterContainer.style.left = '-9999px';
+      posterContainer.style.top = '0';
+      posterContainer.style.width = '375px';
+      posterContainer.style.backgroundColor = '#FFFFFF';
+      posterContainer.style.fontFamily = "'ZCOOL KuaiLe', 'Fredoka', 'Quicksand', 'Noto Sans SC', sans-serif";
+
+      // 4. 构建海报 HTML（使用绝对像素值）
+      posterContainer.innerHTML = `
+        <div style="
+          width: 375px;
+          padding: 32px 20px;
+          background: linear-gradient(180deg, ${themeColor}22 0%, #fffaf5 60%, #ffffff 100%);
+          position: relative;
+          box-sizing: border-box;
+        ">
+          <!-- 别针装饰 -->
+          <div style="position: absolute; top: -6px; right: 24px; width: 14px; height: 14px; background: radial-gradient(circle at 30% 30%, #E8D4B8 0%, #C9B299 100%); border: 2px solid #5E3B25; border-radius: 50%; box-shadow: 0 2px 0 #5E3B25, 0 4px 8px rgba(94, 59, 37, 0.3);"></div>
+          <div style="position: absolute; bottom: 16px; left: 20px; width: 14px; height: 14px; background: radial-gradient(circle at 30% 30%, #E8D4B8 0%, #C9B299 100%); border: 2px solid #5E3B25; border-radius: 50%; box-shadow: 0 2px 0 #5E3B25, 0 4px 8px rgba(94, 59, 37, 0.3);"></div>
+          <div style="position: absolute; bottom: 16px; right: 20px; width: 14px; height: 14px; background: radial-gradient(circle at 30% 30%, #E8D4B8 0%, #C9B299 100%); border: 2px solid #5E3B25; border-radius: 50%; box-shadow: 0 2px 0 #5E3B25, 0 4px 8px rgba(94, 59, 37, 0.3);"></div>
+
+          <!-- 标题 -->
+          <div style="text-align: center; margin-bottom: 16px;">
+            <p style="font-size: 11px; color: rgba(94, 59, 37, 0.5); margin: 0 0 4px 0; letter-spacing: 0.1em;">圣夜学园 · 心灵之蛋</p>
+            <p style="font-size: 13px; color: rgba(94, 59, 37, 0.7); margin: 0; letter-spacing: 0.15em;">你的守护甜心是</p>
+          </div>
+
+          <!-- 人物名称 -->
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h1 style="
+              font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;
+              font-size: 32px;
+              font-weight: 700;
+              color: ${themeColor};
+              margin: 0 0 6px 0;
+              letter-spacing: 0.12em;
+              text-shadow: -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff, 0 4px 0 ${hexToRgba(themeColor, 0.3)};
+            ">${nameZh}</h1>
+            ${nameEn ? `<p style="
+              font-family: 'Nunito', sans-serif;
+              font-size: 12px;
+              font-weight: 700;
+              color: ${themeColor};
+              margin: 0;
+              letter-spacing: 0.18em;
+              opacity: 0.7;
+            ">${nameEn.toUpperCase()}</p>` : ''}
+          </div>
+
+          <!-- 立绘 -->
+          <div style="text-align: center; margin-bottom: 20px; position: relative;">
+            <img src="${guardianImageUrl}" crossorigin="anonymous" style="width: 200px; height: auto; display: block; margin: 0 auto;" />
+          </div>
+
+          <!-- 关键词 + 口号 -->
+          <div style="text-align: center; margin-bottom: 20px;">
+            <div style="
+              display: inline-block;
+              padding: 6px 16px;
+              border: 2px solid ${themeColor};
+              border-radius: 20px;
+              color: ${themeColor};
+              font-size: 13px;
+              font-weight: 600;
+              letter-spacing: 0.1em;
+              margin-bottom: 12px;
+            ">✦ ${match.keyword} ✦</div>
+            <div style="
+              padding: 12px 16px;
+              border: 1px solid ${hexToRgba(themeColor, 0.5)};
+              border-radius: 12px;
+              background: ${hexToRgba(themeColor, 0.07)};
+              color: ${hexToRgba(themeColor, 0.9)};
+              font-size: 13px;
+              line-height: 1.6;
+              letter-spacing: 0.05em;
+            ">${match.tagline}</div>
+          </div>
+
+          <!-- 分隔线 -->
+          <div style="display: flex; align-items: center; justify-content: center; margin: 20px 0;">
+            <div style="flex: 1; height: 1px; background: ${hexToRgba(themeColor, 0.18)};"></div>
+            <span style="margin: 0 12px; color: ${themeColor}; font-size: 12px;">✦</span>
+            <div style="flex: 1; height: 1px; background: ${hexToRgba(themeColor, 0.18)};"></div>
+          </div>
+
+          <!-- 雷达图 -->
+          ${radarImageUrl ? `
+          <div style="text-align: center; margin-bottom: 20px;">
+            <img src="${radarImageUrl}" style="width: 240px; height: 240px; display: block; margin: 0 auto;" />
+          </div>
+          ` : ''}
+
+          <!-- 分隔线 -->
+          <div style="display: flex; align-items: center; justify-content: center; margin: 20px 0;">
+            <div style="flex: 1; height: 1px; background: ${hexToRgba(themeColor, 0.18)};"></div>
+            <span style="margin: 0 12px; color: ${themeColor}; font-size: 12px;">✦</span>
+            <div style="flex: 1; height: 1px; background: ${hexToRgba(themeColor, 0.18)};"></div>
+          </div>
+
+          <!-- 灵魂图鉴 -->
+          <div style="margin-bottom: 20px;">
+            <h3 style="
+              font-size: 16px;
+              font-weight: 700;
+              color: ${themeColor};
+              margin: 0 0 12px 0;
+              text-align: center;
+              letter-spacing: 0.1em;
+            ">◆ 灵魂图鉴</h3>
+
+            ${[
+              { label: "灵魂底色", text: match.soulColor, icon: "◇" },
+              { label: "天赋魔法", text: match.magicGift, icon: "✧" },
+              { label: "暗影陷阱", text: match.shadowTrap, icon: "◆" },
+              ...(match.letter ? [{ label: "破壳寄语", text: match.letter, icon: "♡" }] : []),
+            ].map(({ label, text, icon }) => `
+              <div style="
+                margin-bottom: 12px;
+                padding: 12px;
+                border-left: 3px solid ${themeColor};
+                background: ${hexToRgba(themeColor, 0.07)};
+                border-radius: 0 8px 8px 0;
+              ">
+                <h4 style="
+                  font-size: 13px;
+                  font-weight: 700;
+                  color: ${themeColor};
+                  margin: 0 0 6px 0;
+                  letter-spacing: 0.08em;
+                ">${icon} ${label}</h4>
+                <p style="
+                  font-size: 12px;
+                  color: rgba(94, 59, 37, 0.8);
+                  margin: 0;
+                  line-height: 1.6;
+                  letter-spacing: 0.03em;
+                ">${text}</p>
+              </div>
+            `).join('')}
+          </div>
+
+          ${social && (fatedChar || avoidChar) ? `
+          <!-- 社交磁场 -->
+          <div style="margin-bottom: 20px;">
+            <h3 style="
+              font-size: 16px;
+              font-weight: 700;
+              color: ${themeColor};
+              margin: 0 0 12px 0;
+              text-align: center;
+              letter-spacing: 0.1em;
+            ">◆ 社交磁场</h3>
+
+            ${fatedChar && social.fatedDesc ? `
+            <div style="
+              margin-bottom: 12px;
+              padding: 12px;
+              border: 1px solid ${hexToRgba(fatedChar.themeColor || fatedChar.color, 0.4)};
+              background: ${hexToRgba(fatedChar.themeColor || fatedChar.color, 0.08)};
+              border-radius: 12px;
+            ">
+              <h4 style="
+                font-size: 12px;
+                color: ${fatedChar.themeColor || fatedChar.color};
+                margin: 0 0 6px 0;
+                letter-spacing: 0.1em;
+              ">宿命契合</h4>
+              <p style="
+                font-size: 14px;
+                font-weight: 700;
+                color: ${fatedChar.themeColor || fatedChar.color};
+                margin: 0 0 6px 0;
+                letter-spacing: 0.08em;
+              ">${fatedChar.name.split('(')[0].trim()}</p>
+              <p style="
+                font-size: 11px;
+                color: ${hexToRgba(fatedChar.themeColor || fatedChar.color, 0.88)};
+                margin: 0;
+                line-height: 1.5;
+              ">${social.fatedDesc}</p>
+            </div>
+            ` : ''}
+
+            ${avoidChar && social.avoidDesc ? `
+            <div style="
+              padding: 12px;
+              border: 1px solid ${hexToRgba(avoidChar.themeColor || avoidChar.color, 0.4)};
+              background: ${hexToRgba(avoidChar.themeColor || avoidChar.color, 0.08)};
+              border-radius: 12px;
+            ">
+              <h4 style="
+                font-size: 12px;
+                color: ${avoidChar.themeColor || avoidChar.color};
+                margin: 0 0 6px 0;
+                letter-spacing: 0.1em;
+              ">绝对避雷</h4>
+              <p style="
+                font-size: 14px;
+                font-weight: 700;
+                color: ${avoidChar.themeColor || avoidChar.color};
+                margin: 0 0 6px 0;
+                letter-spacing: 0.08em;
+              ">${avoidChar.name.split('(')[0].trim()}</p>
+              <p style="
+                font-size: 11px;
+                color: ${hexToRgba(avoidChar.themeColor || avoidChar.color, 0.88)};
+                margin: 0;
+                line-height: 1.5;
+              ">${social.avoidDesc}</p>
+            </div>
+            ` : ''}
+          </div>
+          ` : ''}
+
+          <!-- 水印 -->
+          <div style="
+            text-align: center;
+            font-size: 10px;
+            color: rgba(94, 59, 37, 0.4);
+            margin-top: 16px;
+            letter-spacing: 0.1em;
+          ">圣夜学园 · 心灵之蛋 · Project Humpty-Lock</div>
+        </div>
+      `;
+
+      document.body.appendChild(posterContainer);
+
+      // 5. 等待图片加载
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // 6. 使用 html2canvas 截图
+      const html2canvas = (await import("html2canvas")).default;
+      const canvas = await html2canvas(posterContainer, {
+        useCORS: true,
+        allowTaint: false,
+        scale: 3,
+        backgroundColor: '#FFFFFF',
+        logging: false,
+        width: 375,
+        height: posterContainer.offsetHeight,
+        onclone: (clonedDoc) => {
+          // 确保所有样式都正确应用
+          const clonedContainer = clonedDoc.querySelector('div');
+          if (clonedContainer) {
+            clonedContainer.style.display = 'block';
           }
-          return true;
         }
       });
 
-      // 显示模态框供用户长按保存
+      // 7. 清理临时容器
+      document.body.removeChild(posterContainer);
+
+      // 8. 转换为 JPEG
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+
+      // 9. 显示模态框供用户长按保存
       setGeneratedImage(dataUrl);
       setShowModal(true);
       setSaved(true);
