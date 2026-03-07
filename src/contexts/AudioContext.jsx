@@ -152,7 +152,7 @@ export function AudioProvider({ children }) {
 
     isDuckingRef.current = true;
     const currentVolume = audio.volume;
-    const steps = 10;
+    const steps = 8; // 减少步数，更快响应
     const stepDuration = duration / steps;
     const volumeStep = (currentVolume - targetVolume) / steps;
     let currentStep = 0;
@@ -175,7 +175,7 @@ export function AudioProvider({ children }) {
     isDuckingRef.current = false;
     const currentVolume = audio.volume;
     const targetVolume = originalVolumeRef.current;
-    const steps = 15;
+    const steps = 12; // 减少步数
     const stepDuration = duration / steps;
     const volumeStep = (targetVolume - currentVolume) / steps;
     let currentStep = 0;
@@ -198,28 +198,24 @@ export function AudioProvider({ children }) {
 
     // 降低 BGM 音量
     if (isPlaying) {
-      duckBGM(0.15, 100); // 缩短 ducking 时间
+      duckBGM(0.15, 80); // 更快的 ducking
     }
 
     // 设置音效结束回调
     sfxAudio.onended = () => {
       if (isPlaying) {
-        setTimeout(() => restoreBGM(200), 50); // 延迟恢复，避免冲突
+        setTimeout(() => restoreBGM(150), 30); // 更快恢复
       }
     };
 
-    // 播放音效
-    sfxAudio.play()
-      .then(() => {
-        console.log('音效播放成功:', src);
-      })
-      .catch(err => {
-        console.log('音效播放失败:', err);
-        // 即使失败也要恢复 BGM
-        if (isPlaying) {
-          setTimeout(() => restoreBGM(200), 50);
-        }
-      });
+    // 播放音效 - 立即播放，不等待 Promise
+    sfxAudio.play().catch(err => {
+      console.log('音效播放失败:', err);
+      // 即使失败也要恢复 BGM
+      if (isPlaying) {
+        setTimeout(() => restoreBGM(150), 30);
+      }
+    });
   };
 
   const value = {
