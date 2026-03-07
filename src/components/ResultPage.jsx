@@ -248,6 +248,12 @@ export default function ResultPage({ match, scores, onRetry }) {
     try {
       console.log('开始生成海报...');
 
+      // 0. 确保字体已加载
+      if (document.fonts && document.fonts.ready) {
+        await document.fonts.ready;
+        console.log('字体加载完成');
+      }
+
       // 1. 创建 Canvas
       const canvas = document.createElement('canvas');
       const width = 750; // 2倍分辨率
@@ -442,7 +448,9 @@ export default function ResultPage({ match, scores, onRetry }) {
       setSaved(true);
     } catch (e) {
       console.error('保存海报失败:', e);
-      alert(`保存失败: ${e.message}\n\n详细信息：${e.stack || '无'}`);
+      const errorMsg = e.message || '未知错误';
+      const errorDetails = e.stack ? `\n\n技术详情：${e.stack.split('\n').slice(0, 3).join('\n')}` : '';
+      alert(`保存失败: ${errorMsg}${errorDetails}\n\n请尝试：\n1. 刷新页面后重试\n2. 检查网络连接\n3. 使用其他浏览器`);
     } finally {
       setSaving(false);
     }
