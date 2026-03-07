@@ -260,34 +260,20 @@ export default function ResultPage({ match, scores, onRetry }) {
         console.log('✅ 字体加载完成');
       }
 
-      // 2. 转换雷达图为图片
+      // 2. 转换雷达图为图片（使用 html2canvas 预先转换）
       setSavingProgress('转换雷达图...');
-      const radarCanvas = document.querySelector('.recharts-surface');
       let radarImageData = '';
-      if (radarCanvas) {
+      const radarContainer = document.querySelector('.radar-container');
+      if (radarContainer) {
         try {
-          // 创建临时 canvas 来转换 SVG
-          const svgElement = radarCanvas;
-          const svgData = new XMLSerializer().serializeToString(svgElement);
-          const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-          const url = URL.createObjectURL(svgBlob);
-
-          const img = new Image();
-          await new Promise((resolve, reject) => {
-            img.onload = () => {
-              const canvas = document.createElement('canvas');
-              canvas.width = svgElement.width.baseVal.value * 2;
-              canvas.height = svgElement.height.baseVal.value * 2;
-              const ctx = canvas.getContext('2d');
-              ctx.scale(2, 2);
-              ctx.drawImage(img, 0, 0);
-              radarImageData = canvas.toDataURL('image/png');
-              URL.revokeObjectURL(url);
-              resolve();
-            };
-            img.onerror = reject;
-            img.src = url;
+          const html2canvasTemp = (await import('html2canvas')).default;
+          const radarCanvas = await html2canvasTemp(radarContainer, {
+            useCORS: true,
+            scale: 2,
+            backgroundColor: null, // 透明背景
+            logging: false,
           });
+          radarImageData = radarCanvas.toDataURL('image/png');
           console.log('✅ 雷达图转换成功');
         } catch (e) {
           console.error('❌ 雷达图转换失败:', e);
