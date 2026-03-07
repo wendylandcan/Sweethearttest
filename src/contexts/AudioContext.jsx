@@ -12,9 +12,9 @@ export function AudioProvider({ children }) {
   const originalVolumeRef = useRef(0.3); // 保存 BGM 原始音量
   const isDuckingRef = useRef(false); // 是否正在降低音量
 
-  // 音效池 - 增加到 5 个实例
+  // 音效池 - 增加到 8 个实例以支持快速连续点击
   const sfxPoolRef = useRef({});
-  const POOL_SIZE = 5; // ✅ 修复 2: 增加音频池大小
+  const POOL_SIZE = 8; // ✅ 修复 2: 增加音频池大小以支持快速点击
 
   useEffect(() => {
     // 创建单例音频实例
@@ -273,7 +273,7 @@ export function AudioProvider({ children }) {
     }, stepDuration);
   };
 
-  // ✅ 修复 3: 获取可用的音效实例，强制返回可用实例
+  // ✅ 修复 3: 获取可用的音效实例，优先使用完全空闲的实例
   const getAvailableAudio = (sfxName) => {
     const pool = sfxPoolRef.current[sfxName];
     if (!pool) {
@@ -281,10 +281,25 @@ export function AudioProvider({ children }) {
       return null;
     }
 
-    // 找到第一个未在播放的实例
-    const available = pool.find(audio => audio.paused || audio.ended);
-    if (available) {
-      return available;
+    // 优先找到完全空闲的实例（已暂停且在起始位置）
+    const idle = pool.find(audio => audio.paused && audio.currentTime === 0);
+    if (idle) {
+      return idle;
+    }
+
+    // 其次找到已暂停的实例
+    const paused = pool.find(audio => audio.paused);
+    if (paused) {
+      return paused;
+    }
+
+    // 再找播放时间最长的实例（最接近结束）
+    const playing = pool.filter(audio => !audio.paused);
+    if (playing.length > 0) {
+      const mostPlayed = playing.reduce((prev, curr) =>
+        curr.currentTime > prev.currentTime ? curr : prev
+      );
+      return mostPlayed;
     }
 
     // ✅ 如果都在播放，强制使用第一个
@@ -303,14 +318,15 @@ export function AudioProvider({ children }) {
       return;
     }
 
-    // ✅ 强制停止并重置音频
+    // ✅ 强制停止并重置音频（使用 try-catch 避免错误）
     try {
+      // 立即停止播放
       sfxAudio.pause();
       sfxAudio.currentTime = 0;
-      // 移除所有旧的事件监听器，避免重复绑定
+      // 清除旧的事件监听器
       sfxAudio.onended = null;
     } catch (e) {
-      console.warn(`⚠️  重置音频失败: ${sfxName}`, e);
+      // 忽略重置错误，继续播放
     }
 
     // 播放前降低 BGM 音量（更快的过渡）
@@ -318,7 +334,7 @@ export function AudioProvider({ children }) {
       duckBGM(0.1, 30); // 减少到 30ms
     }
 
-    // 立即播放
+    // 立即播放（不等待 Promise）
     const playPromise = sfxAudio.play();
 
     if (playPromise !== undefined) {
@@ -330,8 +346,7 @@ export function AudioProvider({ children }) {
           }
         })
         .catch(err => {
-          console.warn(`❌ 音效播放失败: ${sfxName}`, err);
-          // 即使失败也要恢复 BGM
+          // 静默处理播放失败，不影响用户体验
           if (isPlaying) {
             setTimeout(() => restoreBGM(50), 100);
           }
