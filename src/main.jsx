@@ -4,7 +4,7 @@ import "./index.css";
 import App from "./App.jsx";
 import { registerServiceWorker } from "./utils/serviceWorker.js";
 
-// 生产环境下注册 Service Worker
+// 生产环境下注册 Service Worker（可通过环境变量控制）
 if (import.meta.env.PROD && typeof window !== 'undefined') {
   registerServiceWorker();
 }

@@ -7,11 +7,19 @@
   "routes": [
     {
       "src": "/sw.js",
-      "dest": "/sw.js",
       "headers": {
-        "Content-Type": "application/javascript",
-        "Service-Worker-Allowed": "/"
+        "Content-Type": "application/javascript; charset=utf-8",
+        "Service-Worker-Allowed": "/",
+        "Cache-Control": "no-cache"
       }
+    },
+    {
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
+    },
+    {
+      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|mp3|wav|ogg))",
+      "dest": "/$1"
     },
     {
       "src": "/(.*)",
