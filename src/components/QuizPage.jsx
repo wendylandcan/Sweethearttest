@@ -5,7 +5,7 @@ import { calculateScores, findMatch } from "../utils/algorithm";
 import { useAudio } from "../contexts/AudioContext";
 
 const SUITS = ["♣", "♥", "♠", "♦"];
-const SUIT_COLORS = ["#a8d8a8", "#ff9fb2", "#c0c0c0", "#ffd700"];
+const SUIT_COLORS = ["#a8d8a8", "#ff9fb2", "#87CEEB", "#ffd700"];
 const QUESTIONS_PER_SUIT = 8; // 32 / 4
 
 export default function QuizPage({ onComplete }) {
