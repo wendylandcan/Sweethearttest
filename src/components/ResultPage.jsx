@@ -260,7 +260,7 @@ export default function ResultPage({ match, scores, onRetry }) {
         console.log('✅ 字体加载完成');
       }
 
-      // 2. 转换雷达图为图片（使用 html2canvas 预先转换）
+      // 2. 转换雷达图为图片
       setSavingProgress('转换雷达图...');
       let radarImageData = '';
       const radarContainer = document.querySelector('.radar-container');
@@ -270,7 +270,7 @@ export default function ResultPage({ match, scores, onRetry }) {
           const radarCanvas = await html2canvasTemp(radarContainer, {
             useCORS: true,
             scale: 2,
-            backgroundColor: null, // 透明背景
+            backgroundColor: null,
             logging: false,
           });
           radarImageData = radarCanvas.toDataURL('image/png');
@@ -295,28 +295,165 @@ export default function ResultPage({ match, scores, onRetry }) {
         overflow: visible;
       `;
 
-      // 4. 构建海报内容（复制 posterAreaRef 的 HTML）
-      const posterContent = posterAreaRef.current.cloneNode(true);
+      // 4. 构建海报内容 HTML
+      posterTemplate.innerHTML = `
+        <div class="poster-area" style="position: relative; padding: 30px 20px; background: transparent;">
+          <!-- 别针装饰 -->
+          <div style="position: absolute; top: -8px; right: 30px; width: 16px; height: 16px; background: radial-gradient(circle at 30% 30%, #E8D4B8 0%, #C9B299 100%); border: 2px solid #5E3B25; border-radius: 50%; box-shadow: 0 2px 0 #5E3B25, 0 4px 8px rgba(94, 59, 37, 0.3); z-index: 10;"></div>
+          <div style="position: absolute; bottom: 20px; left: 25px; width: 16px; height: 16px; background: radial-gradient(circle at 30% 30%, #E8D4B8 0%, #C9B299 100%); border: 2px solid #5E3B25; border-radius: 50%; box-shadow: 0 2px 0 #5E3B25, 0 4px 8px rgba(94, 59, 37, 0.3); z-index: 10;"></div>
+          <div style="position: absolute; bottom: 20px; right: 25px; width: 16px; height: 16px; background: radial-gradient(circle at 30% 30%, #E8D4B8 0%, #C9B299 100%); border: 2px solid #5E3B25; border-radius: 50%; box-shadow: 0 2px 0 #5E3B25, 0 4px 8px rgba(94, 59, 37, 0.3); z-index: 10;"></div>
 
-      // 替换雷达图为图片
-      if (radarImageData) {
-        const radarContainer = posterContent.querySelector('.radar-container');
-        if (radarContainer) {
-          radarContainer.innerHTML = `
+          <!-- Header -->
+          <div style="text-align: center; margin-bottom: 20px;">
+            <p style="font-size: 11px; color: rgba(74, 52, 46, 0.6); margin: 0 0 8px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">圣夜学园 · 心灵之蛋</p>
+            <p style="font-size: 13px; color: rgba(74, 52, 46, 0.75); margin: 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">你的守护甜心是</p>
+          </div>
+
+          <!-- 角色名 -->
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h1 style="font-size: 36px; font-weight: 700; color: ${themeColor}; margin: 0 0 8px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff, 0 3px 0 ${hexToRgba(themeColor, 0.4)};">
+              ${nameZh}
+            </h1>
+            ${nameEn ? `<p style="font-size: 12px; font-weight: 700; color: ${themeColor}; margin: 0; font-family: 'Nunito', sans-serif; opacity: 0.65; letter-spacing: 0.18em;">${nameEn.toUpperCase()}</p>` : ''}
+          </div>
+
+          <!-- 立绘 -->
+          <div style="text-align: center; margin: 20px 0; position: relative;">
             <img
-              src="${radarImageData}"
-              alt="能力雷达图"
-              style="width: 240px; height: 240px; display: block; margin: 0 auto;"
+              src="${guardianImageUrl}"
+              alt="${match.name}"
+              crossorigin="anonymous"
+              style="width: 200px; height: auto; display: block; margin: 0 auto;"
             />
-          `;
-        }
-      }
+          </div>
 
-      // 移除不需要的元素
-      const starField = posterContent.querySelector('.star-field');
-      if (starField) starField.remove();
+          <!-- 关键词 + 口号 -->
+          <div style="text-align: center; margin: 20px 0;">
+            <div style="display: inline-block; padding: 8px 20px; border: 2px solid ${themeColor}; border-radius: 50px; color: ${themeColor}; font-size: 14px; font-weight: 700; margin-bottom: 12px; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
+              ✦ ${match.keyword} ✦
+            </div>
+            <div style="padding: 12px 16px; border: 1.5px solid ${hexToRgba(themeColor, 0.5)}; border-radius: 12px; background: ${hexToRgba(themeColor, 0.07)}; margin: 0 auto; max-width: 300px;">
+              <p style="font-size: 13px; color: ${hexToRgba(themeColor, 0.9)}; margin: 0; line-height: 1.6; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
+                ${match.tagline}
+              </p>
+            </div>
+          </div>
 
-      posterTemplate.appendChild(posterContent);
+          <!-- 分隔线 -->
+          <div style="display: flex; align-items: center; justify-content: center; margin: 24px 0; gap: 12px;">
+            <span style="width: 60px; height: 1px; background: ${hexToRgba(themeColor, 0.18)};"></span>
+            <span style="color: ${themeColor}; font-size: 10px;">✦</span>
+            <span style="width: 60px; height: 1px; background: ${hexToRgba(themeColor, 0.18)};"></span>
+          </div>
+
+          <!-- 雷达图 -->
+          ${radarImageData ? `
+            <div style="text-align: center; margin: 20px 0;">
+              <img
+                src="${radarImageData}"
+                alt="能力雷达图"
+                style="width: 240px; height: 240px; display: block; margin: 0 auto;"
+              />
+            </div>
+          ` : ''}
+
+          <!-- 分隔线 -->
+          <div style="display: flex; align-items: center; justify-content: center; margin: 24px 0; gap: 12px;">
+            <span style="width: 60px; height: 1px; background: ${hexToRgba(themeColor, 0.18)};"></span>
+            <span style="color: ${themeColor}; font-size: 10px;">✦</span>
+            <span style="width: 60px; height: 1px; background: ${hexToRgba(themeColor, 0.18)};"></span>
+          </div>
+
+          <!-- 灵魂图鉴 -->
+          <div style="margin: 20px 0;">
+            <h3 style="font-size: 18px; font-weight: 700; color: ${themeColor}; text-align: center; margin: 0 0 16px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
+              灵魂图鉴
+            </h3>
+
+            <div style="border-left: 3px solid ${themeColor}; background: ${hexToRgba(themeColor, 0.07)}; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px;">
+              <h4 style="font-size: 14px; font-weight: 700; color: ${themeColor}; margin: 0 0 8px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
+                ◇ 灵魂底色
+              </h4>
+              <p style="font-size: 13px; color: #4A342E; line-height: 1.6; margin: 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
+                ${match.soulColor}
+              </p>
+            </div>
+
+            <div style="border-left: 3px solid ${themeColor}; background: ${hexToRgba(themeColor, 0.07)}; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px;">
+              <h4 style="font-size: 14px; font-weight: 700; color: ${themeColor}; margin: 0 0 8px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
+                ✧ 天赋魔法
+              </h4>
+              <p style="font-size: 13px; color: #4A342E; line-height: 1.6; margin: 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
+                ${match.magicGift}
+              </p>
+            </div>
+
+            <div style="border-left: 3px solid ${themeColor}; background: ${hexToRgba(themeColor, 0.07)}; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px;">
+              <h4 style="font-size: 14px; font-weight: 700; color: ${themeColor}; margin: 0 0 8px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
+                ◆ 暗影陷阱
+              </h4>
+              <p style="font-size: 13px; color: #4A342E; line-height: 1.6; margin: 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
+                ${match.shadowTrap}
+              </p>
+            </div>
+
+            ${match.letter ? `
+              <div style="border-left: 3px solid ${themeColor}; background: ${hexToRgba(themeColor, 0.07)}; padding: 12px 16px; border-radius: 8px;">
+                <h4 style="font-size: 14px; font-weight: 700; color: ${themeColor}; margin: 0 0 8px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
+                  ♡ 破壳寄语
+                </h4>
+                <p style="font-size: 13px; color: #4A342E; line-height: 1.6; margin: 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
+                  ${match.letter}
+                </p>
+              </div>
+            ` : ''}
+          </div>
+
+          ${social && (fatedChar || avoidChar) ? `
+            <!-- 社交磁场 -->
+            <div style="margin: 20px 0;">
+              <h3 style="font-size: 18px; font-weight: 700; color: ${themeColor}; text-align: center; margin: 0 0 16px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
+                社交磁场
+              </h3>
+
+              ${fatedChar && social.fatedDesc ? `
+                <div style="background: ${(fatedChar.themeColor || fatedChar.color)}18; border: 1.5px solid ${hexToRgba(fatedChar.themeColor || fatedChar.color, 0.4)}; border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+                  <h4 style="font-size: 13px; font-weight: 700; color: ${fatedChar.themeColor || fatedChar.color}; margin: 0 0 8px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
+                    宿命契合
+                  </h4>
+                  <p style="font-size: 16px; font-weight: 700; color: ${fatedChar.themeColor || fatedChar.color}; margin: 0 0 8px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
+                    ${fatedChar.name.split('(')[0].trim()}
+                  </p>
+                  <p style="font-size: 12px; color: ${hexToRgba(fatedChar.themeColor || fatedChar.color, 0.88)}; line-height: 1.6; margin: 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
+                    ${social.fatedDesc}
+                  </p>
+                </div>
+              ` : ''}
+
+              ${avoidChar && social.avoidDesc ? `
+                <div style="background: ${(avoidChar.themeColor || avoidChar.color)}18; border: 1.5px solid ${hexToRgba(avoidChar.themeColor || avoidChar.color, 0.4)}; border-radius: 12px; padding: 16px;">
+                  <h4 style="font-size: 13px; font-weight: 700; color: ${avoidChar.themeColor || avoidChar.color}; margin: 0 0 8px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
+                    绝对避雷
+                  </h4>
+                  <p style="font-size: 16px; font-weight: 700; color: ${avoidChar.themeColor || avoidChar.color}; margin: 0 0 8px 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
+                    ${avoidChar.name.split('(')[0].trim()}
+                  </p>
+                  <p style="font-size: 12px; color: ${hexToRgba(avoidChar.themeColor || avoidChar.color, 0.88)}; line-height: 1.6; margin: 0; font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;">
+                    ${social.avoidDesc}
+                  </p>
+                </div>
+              ` : ''}
+            </div>
+          ` : ''}
+
+          <!-- 水印 -->
+          <div style="text-align: center; margin-top: 24px; padding-top: 16px; border-top: 1px solid ${hexToRgba(themeColor, 0.15)};">
+            <p style="font-size: 10px; color: rgba(74, 52, 46, 0.4); margin: 0; font-family: 'Arial', sans-serif;">
+              圣夜学园 · 心灵之蛋 · Project Humpty-Lock
+            </p>
+          </div>
+        </div>
+      `;
 
       // 5. 添加到 DOM
       document.body.appendChild(posterTemplate);
