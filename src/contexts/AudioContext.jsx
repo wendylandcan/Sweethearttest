@@ -14,6 +14,7 @@ export function AudioProvider({ children }) {
 
   // 音效池 - 增加到 8 个实例以支持快速连续点击
   const sfxPoolRef = useRef({});
+  const sfxIndexRef = useRef({}); // ✅ 添加索引追踪，用于轮询
   const POOL_SIZE = 8; // ✅ 修复 2: 增加音频池大小以支持快速点击
 
   useEffect(() => {
@@ -73,6 +74,7 @@ export function AudioProvider({ children }) {
         pool.push(sfx);
       }
       sfxPoolRef.current[key] = pool;
+      sfxIndexRef.current[key] = 0; // ✅ 初始化轮询索引
     });
     console.log('✅ 音效池已初始化');
 
@@ -241,7 +243,7 @@ export function AudioProvider({ children }) {
     }, stepDuration);
   };
 
-  // ✅ 修复 3: 获取可用的音效实例，优先使用完全空闲的实例
+  // ✅ 修复 3: 使用轮询策略快速获取音效实例
   const getAvailableAudio = (sfxName) => {
     const pool = sfxPoolRef.current[sfxName];
     if (!pool) {
@@ -249,30 +251,12 @@ export function AudioProvider({ children }) {
       return null;
     }
 
-    // 优先找到完全空闲的实例（已暂停且在起始位置）
-    const idle = pool.find(audio => audio.paused && audio.currentTime === 0);
-    if (idle) {
-      return idle;
-    }
+    // ✅ 使用轮询策略（round-robin）快速选择下一个实例
+    const currentIndex = sfxIndexRef.current[sfxName] || 0;
+    const nextIndex = (currentIndex + 1) % POOL_SIZE;
+    sfxIndexRef.current[sfxName] = nextIndex;
 
-    // 其次找到已暂停的实例
-    const paused = pool.find(audio => audio.paused);
-    if (paused) {
-      return paused;
-    }
-
-    // 再找播放时间最长的实例（最接近结束）
-    const playing = pool.filter(audio => !audio.paused);
-    if (playing.length > 0) {
-      const mostPlayed = playing.reduce((prev, curr) =>
-        curr.currentTime > prev.currentTime ? curr : prev
-      );
-      return mostPlayed;
-    }
-
-    // ✅ 如果都在播放，强制使用第一个
-    console.warn(`⚠️  所有 ${sfxName} 实例都在播放，强制重用第一个`);
-    return pool[0];
+    return pool[currentIndex];
   };
 
   // ✅ 修复 4: 播放音效，立即播放不等待 BGM ducking
