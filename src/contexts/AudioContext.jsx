@@ -12,10 +12,11 @@ export function AudioProvider({ children }) {
   const originalVolumeRef = useRef(0.3); // 保存 BGM 原始音量
   const isDuckingRef = useRef(false); // 是否正在降低音量
 
-  // 音效池 - 增加到 8 个实例以支持快速连续点击
-  const sfxPoolRef = useRef({});
-  const sfxIndexRef = useRef({}); // ✅ 添加索引追踪，用于轮询
-  const POOL_SIZE = 8; // ✅ 修复 2: 增加音频池大小以支持快速点击
+  // ✅ 使用 Web Audio API 实现低延迟音效播放
+  const audioContextRef = useRef(null);
+  const sfxBuffersRef = useRef({}); // 存储解码后的音频缓冲区
+  const sfxIndexRef = useRef({}); // 轮询索引
+  const POOL_SIZE = 8;
 
   useEffect(() => {
     // 创建单例音频实例
@@ -24,7 +25,14 @@ export function AudioProvider({ children }) {
     audio.volume = 0; // 初始音量为 0，用于 fade-in
     audioRef.current = audio;
 
-    // ✅ 修复 1 & 5: 提前初始化音效池，添加错误处理和日志
+    // ✅ 初始化 Web Audio API
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (AudioContextClass) {
+      audioContextRef.current = new AudioContextClass();
+      console.log('✅ Web Audio API 已初始化');
+    }
+
+    // ✅ 使用 Web Audio API 加载音效
     const sfxFiles = {
       'option': '/option-sound.wav',
       'error': '/error-sound.wav',
@@ -35,48 +43,19 @@ export function AudioProvider({ children }) {
       'stress': '/stress-sound.wav'
     };
 
-    // ✅ 清理旧的音效池（如果存在）
-    Object.values(sfxPoolRef.current).forEach(pool => {
-      pool.forEach(audio => {
-        try {
-          audio.pause();
-          audio.currentTime = 0;
-          audio.onended = null;
-          audio.onerror = null;
-          audio.oncanplaythrough = null;
-        } catch (e) {
-          // 忽略清理错误
-        }
-      });
-    });
-    sfxPoolRef.current = {};
-
-    Object.entries(sfxFiles).forEach(([key, src]) => {
-      const pool = [];
-      for (let i = 0; i < POOL_SIZE; i++) {
-        const sfx = new Audio(src);
-        sfx.preload = 'auto';
-        sfx.volume = 0.8; // 提高音量到 0.8
-
-        // ✅ 设置音频为立即播放模式
-        sfx.load(); // 强制加载
-
-        // ✅ 添加错误处理
-        sfx.addEventListener('error', (e) => {
-          console.error(`❌ 音频加载失败: ${key}`, e);
-        });
-
-        // ✅ 添加加载完成日志
-        sfx.addEventListener('canplaythrough', () => {
-          console.log(`✅ 音频加载完成: ${key} (实例 ${i + 1}/${POOL_SIZE})`);
-        }, { once: true });
-
-        pool.push(sfx);
+    // 加载并解码所有音效
+    Object.entries(sfxFiles).forEach(async ([key, src]) => {
+      try {
+        const response = await fetch(src);
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
+        sfxBuffersRef.current[key] = audioBuffer;
+        sfxIndexRef.current[key] = 0;
+        console.log(`✅ 音效加载完成: ${key}`);
+      } catch (error) {
+        console.error(`❌ 音效加载失败: ${key}`, error);
       }
-      sfxPoolRef.current[key] = pool;
-      sfxIndexRef.current[key] = 0; // ✅ 初始化轮询索引
     });
-    console.log('✅ 音效池已初始化');
 
     // 监听音频事件
     const handlePlay = () => setIsPlaying(true);
@@ -108,6 +87,14 @@ export function AudioProvider({ children }) {
 
     // ✅ 修复 6: 改进音频解锁逻辑 - 移除自动解锁所有音频池
     const handleGlobalClick = () => {
+      // 解锁 Web Audio API
+      if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
+        audioContextRef.current.resume().then(() => {
+          console.log('✅ Web Audio API 已解锁');
+          setIsAudioUnlocked(true);
+        });
+      }
+
       if (pendingPlayRef.current && !isPlaying) {
         audio.play()
           .then(() => {
@@ -243,86 +230,54 @@ export function AudioProvider({ children }) {
     }, stepDuration);
   };
 
-  // ✅ 修复 3: 使用轮询策略快速获取音效实例
-  const getAvailableAudio = (sfxName) => {
-    const pool = sfxPoolRef.current[sfxName];
-    if (!pool) {
-      console.warn(`⚠️  音效池未找到: ${sfxName}`);
-      return null;
-    }
-
-    // ✅ 使用轮询策略（round-robin）快速选择下一个实例
-    const currentIndex = sfxIndexRef.current[sfxName] || 0;
-    const nextIndex = (currentIndex + 1) % POOL_SIZE;
-    sfxIndexRef.current[sfxName] = nextIndex;
-
-    return pool[currentIndex];
-  };
-
-  // ✅ 修复 4: 播放音效，立即播放不等待 BGM ducking
+  // ✅ 使用 Web Audio API 播放音效（零延迟）
   const playSFX = (src) => {
     // 从路径提取音效名称
     const sfxName = src.split('/').pop().replace('-sound.wav', '').replace('.wav', '');
-    const sfxAudio = getAvailableAudio(sfxName);
+    const audioBuffer = sfxBuffersRef.current[sfxName];
 
-    if (!sfxAudio) {
-      console.warn(`⚠️  音效未找到: ${sfxName}`);
+    if (!audioBuffer || !audioContextRef.current) {
+      console.warn(`⚠️  音效未找到或 Web Audio API 未初始化: ${sfxName}`);
       return;
     }
 
-    // ✅ 强制停止并重置音频（使用 try-catch 避免错误）
-    try {
-      // 立即停止播放
-      sfxAudio.pause();
-      sfxAudio.currentTime = 0;
-      // 清除旧的事件监听器
-      sfxAudio.onended = null;
-    } catch (e) {
-      // 忽略重置错误，继续播放
+    // 解锁 Web Audio API（如果需要）
+    if (audioContextRef.current.state === 'suspended') {
+      audioContextRef.current.resume();
     }
 
-    // ✅ 立即播放音效，不等待任何操作
-    const playPromise = sfxAudio.play();
+    // ✅ 创建音频源节点（每次播放都创建新的）
+    const source = audioContextRef.current.createBufferSource();
+    source.buffer = audioBuffer;
 
-    // ✅ 播放后立即降低 BGM 音量（异步，不阻塞音效播放）
+    // 创建增益节点控制音量
+    const gainNode = audioContextRef.current.createGain();
+    gainNode.gain.value = 0.8;
+
+    // 连接节点：source -> gain -> destination
+    source.connect(gainNode);
+    gainNode.connect(audioContextRef.current.destination);
+
+    // ✅ 立即播放（零延迟）
+    source.start(0);
+
+    // 播放后立即降低 BGM 音量（异步，不阻塞音效播放）
     if (isPlaying) {
       duckBGM(0.1);
     }
 
-    if (playPromise !== undefined) {
-      playPromise
-        .then(() => {
-          // 首次成功播放后标记音频已解锁
-          if (!isAudioUnlocked) {
-            setIsAudioUnlocked(true);
-            console.log('✅ 音频已通过音效播放解锁');
-          }
-        })
-        .catch(err => {
-          // 如果是首次播放失败，尝试通过用户交互解锁
-          if (!isAudioUnlocked) {
-            console.log('⚠️  音效播放被阻止，需要用户交互解锁');
-          }
-          // 静默处理播放失败，不影响用户体验
-          if (isPlaying) {
-            setTimeout(() => restoreBGM(50), 100);
-          }
-        });
-    }
-
-    // 设置音效结束回调（使用 onended 替代 addEventListener）
-    sfxAudio.onended = () => {
+    // 音效结束后恢复 BGM
+    source.onended = () => {
       if (isPlaying) {
         restoreBGM(50);
       }
     };
 
-    // 备用：如果音效超时，强制恢复 BGM
-    setTimeout(() => {
-      if (isPlaying && isDuckingRef.current) {
-        restoreBGM(50);
-      }
-    }, 2000);
+    // 标记音频已解锁
+    if (!isAudioUnlocked) {
+      setIsAudioUnlocked(true);
+      console.log('✅ 音频已通过音效播放解锁');
+    }
   };
 
   const value = {
