@@ -634,7 +634,7 @@ html, body {
 .q-text {
   font-family: 'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif;
   font-size: clamp(16px, 4.5vw, 20px);
-  font-weight: 600;
+  font-weight: 400;
   line-height: 1.6;
   margin-bottom: 24px;
   color: var(--text);
