@@ -190,7 +190,7 @@ export function AudioProvider({ children }) {
   };
 
   // BGM Ducking - 立即降低 BGM 音量（无过渡动画）
-  const duckBGM = (targetVolume = 0.1) => {
+  const duckBGM = () => {
     const audio = audioRef.current;
     if (!audio || !isPlaying) return;
 
@@ -202,7 +202,7 @@ export function AudioProvider({ children }) {
 
     isDuckingRef.current = true;
     // ✅ 立即设置音量，无过渡
-    audio.volume = targetVolume;
+    audio.volume = 0.1;
   };
 
   // 恢复 BGM 音量（快速过渡）
@@ -232,6 +232,8 @@ export function AudioProvider({ children }) {
 
   // ✅ 使用 Web Audio API 播放音效（零延迟）
   const playSFX = (src) => {
+    const startTime = performance.now(); // 调试：记录开始时间
+
     // 从路径提取音效名称
     const sfxName = src.split('/').pop().replace('-sound.wav', '').replace('.wav', '');
     const audioBuffer = sfxBuffersRef.current[sfxName];
@@ -244,6 +246,12 @@ export function AudioProvider({ children }) {
     // 解锁 Web Audio API（如果需要）
     if (audioContextRef.current.state === 'suspended') {
       audioContextRef.current.resume();
+    }
+
+    // 播放前立即降低 BGM 音量（同步执行）
+    if (isPlaying && audioRef.current) {
+      audioRef.current.volume = 0.1;
+      isDuckingRef.current = true;
     }
 
     // ✅ 创建音频源节点（每次播放都创建新的）
@@ -261,10 +269,8 @@ export function AudioProvider({ children }) {
     // ✅ 立即播放（零延迟）
     source.start(0);
 
-    // 播放后立即降低 BGM 音量（异步，不阻塞音效播放）
-    if (isPlaying) {
-      duckBGM(0.1);
-    }
+    const playTime = performance.now();
+    console.log(`🎵 音效播放延迟: ${(playTime - startTime).toFixed(2)}ms`);
 
     // 音效结束后恢复 BGM
     source.onended = () => {
