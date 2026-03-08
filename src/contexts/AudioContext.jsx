@@ -57,6 +57,9 @@ export function AudioProvider({ children }) {
         sfx.preload = 'auto';
         sfx.volume = 0.8; // 提高音量到 0.8
 
+        // ✅ 设置音频为立即播放模式
+        sfx.load(); // 强制加载
+
         // ✅ 添加错误处理
         sfx.addEventListener('error', (e) => {
           console.error(`❌ 音频加载失败: ${key}`, e);
@@ -67,7 +70,6 @@ export function AudioProvider({ children }) {
           console.log(`✅ 音频加载完成: ${key} (实例 ${i + 1}/${POOL_SIZE})`);
         }, { once: true });
 
-        sfx.load();
         pool.push(sfx);
       }
       sfxPoolRef.current[key] = pool;

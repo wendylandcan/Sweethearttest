@@ -50,7 +50,7 @@ export default function QuizPage({ onComplete }) {
   const handleSelect = (optionIdx) => {
     if (isAnimating || selected !== null) return;
 
-    // 使用统一的音效播放方法（会自动降低 BGM 音量）
+    // ✅ 同步播放音效，不使用任何异步包装
     playSFX('/option-sound.wav');
 
     setSelected(optionIdx);
