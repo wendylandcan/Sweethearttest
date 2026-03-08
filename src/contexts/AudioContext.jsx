@@ -29,7 +29,6 @@ export function AudioProvider({ children }) {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     if (AudioContextClass) {
       audioContextRef.current = new AudioContextClass();
-      console.log('✅ Web Audio API 已初始化');
     }
 
     // ✅ 使用 Web Audio API 加载音效
@@ -51,7 +50,6 @@ export function AudioProvider({ children }) {
         const audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
         sfxBuffersRef.current[key] = audioBuffer;
         sfxIndexRef.current[key] = 0;
-        console.log(`✅ 音效加载完成: ${key}`);
       } catch (error) {
         console.error(`❌ 音效加载失败: ${key}`, error);
       }
@@ -232,58 +230,33 @@ export function AudioProvider({ children }) {
 
   // ✅ 使用 Web Audio API 播放音效（零延迟）
   const playSFX = (src) => {
-    const startTime = performance.now(); // 调试：记录开始时间
-
     // 从路径提取音效名称
     const sfxName = src.split('/').pop().replace('-sound.wav', '').replace('.wav', '');
     const audioBuffer = sfxBuffersRef.current[sfxName];
 
-    if (!audioBuffer || !audioContextRef.current) {
-      console.warn(`⚠️  音效未找到或 Web Audio API 未初始化: ${sfxName}`);
-      return;
-    }
+    // ✅ 最小化检查，直接播放
+    if (!audioBuffer || !audioContextRef.current) return;
 
-    // 解锁 Web Audio API（如果需要）
-    if (audioContextRef.current.state === 'suspended') {
-      audioContextRef.current.resume();
-    }
+    // ✅ 创建并立即播放（不做任何其他操作）
+    const source = audioContextRef.current.createBufferSource();
+    source.buffer = audioBuffer;
+    const gainNode = audioContextRef.current.createGain();
+    gainNode.gain.value = 0.8;
+    source.connect(gainNode);
+    gainNode.connect(audioContextRef.current.destination);
+    source.start(0);
 
-    // 播放前立即降低 BGM 音量（同步执行）
+    // ✅ 播放后才处理其他逻辑（BGM降低、状态更新等）
     if (isPlaying && audioRef.current) {
       audioRef.current.volume = 0.1;
       isDuckingRef.current = true;
     }
 
-    // ✅ 创建音频源节点（每次播放都创建新的）
-    const source = audioContextRef.current.createBufferSource();
-    source.buffer = audioBuffer;
-
-    // 创建增益节点控制音量
-    const gainNode = audioContextRef.current.createGain();
-    gainNode.gain.value = 0.8;
-
-    // 连接节点：source -> gain -> destination
-    source.connect(gainNode);
-    gainNode.connect(audioContextRef.current.destination);
-
-    // ✅ 立即播放（零延迟）
-    source.start(0);
-
-    const playTime = performance.now();
-    console.log(`🎵 音效播放延迟: ${(playTime - startTime).toFixed(2)}ms`);
-
-    // 音效结束后恢复 BGM
     source.onended = () => {
-      if (isPlaying) {
-        restoreBGM(50);
-      }
+      if (isPlaying) restoreBGM(50);
     };
 
-    // 标记音频已解锁
-    if (!isAudioUnlocked) {
-      setIsAudioUnlocked(true);
-      console.log('✅ 音频已通过音效播放解锁');
-    }
+    if (!isAudioUnlocked) setIsAudioUnlocked(true);
   };
 
   const value = {

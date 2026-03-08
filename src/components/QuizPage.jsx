@@ -48,13 +48,11 @@ export default function QuizPage({ onComplete }) {
     : 0;
 
   const handleSelect = (optionIdx) => {
-    if (isAnimating || selected !== null) return;
-
-    const clickTime = performance.now();
-    console.log(`👆 选项点击时间: ${clickTime.toFixed(2)}ms`);
-
-    // ✅ 同步播放音效，不使用任何异步包装
+    // ✅ 第一行就播放音效，不做任何检查
     playSFX('/option-sound.wav');
+
+    // ✅ 然后才检查状态
+    if (isAnimating || selected !== null) return;
 
     setSelected(optionIdx);
     setDirection(1);
