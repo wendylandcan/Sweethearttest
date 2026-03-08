@@ -268,22 +268,22 @@ export default function ResultPage({ match, scores, onRetry }) {
       const radarContainer = document.querySelector('.radar-container');
       if (radarContainer) {
         try {
-          // 等待额外时间确保雷达图完全渲染（包括字体）
-          await new Promise(resolve => setTimeout(resolve, 500));
+          // ✅ 等待字体和雷达图完全渲染
+          await new Promise(resolve => setTimeout(resolve, 800));
 
-          // 在转换前强制应用字体到所有 text 元素
-          const textElements = radarContainer.querySelectorAll('text');
-          const originalStyles = [];
-          textElements.forEach((text, index) => {
-            // 保存原始样式
-            originalStyles[index] = {
-              fontFamily: text.style.fontFamily,
-              fontWeight: text.style.fontWeight
-            };
-            // 强制应用可爱字体
+          // ✅ 强制应用字体到所有 text 元素（包括 tspan）
+          const textElements = radarContainer.querySelectorAll('text, tspan');
+          textElements.forEach((text) => {
+            // 直接设置 SVG 属性（更可靠）
+            text.setAttribute('font-family', "'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif");
+            text.setAttribute('font-weight', '700');
+            // 同时设置 style（双重保险）
             text.style.fontFamily = "'ZCOOL KuaiLe', 'Fredoka', 'Noto Sans SC', sans-serif";
             text.style.fontWeight = '700';
           });
+
+          // ✅ 再等待一下让字体应用生效
+          await new Promise(resolve => setTimeout(resolve, 200));
 
           const html2canvasTemp = (await import('html2canvas')).default;
           const radarCanvas = await html2canvasTemp(radarContainer, {
@@ -294,12 +294,6 @@ export default function ResultPage({ match, scores, onRetry }) {
           });
           radarImageData = radarCanvas.toDataURL('image/png');
           console.log('✅ 雷达图转换成功，尺寸:', radarCanvas.width, 'x', radarCanvas.height);
-
-          // 恢复原始样式
-          textElements.forEach((text, index) => {
-            text.style.fontFamily = originalStyles[index].fontFamily;
-            text.style.fontWeight = originalStyles[index].fontWeight;
-          });
         } catch (e) {
           console.error('❌ 雷达图转换失败:', e);
         }
@@ -347,7 +341,7 @@ export default function ResultPage({ match, scores, onRetry }) {
             <img
               src="${guardianImageUrl}"
               alt="${match.name}"
-              crossorigin="anonymous"
+              crossOrigin="anonymous"
               style="width: 200px; height: auto; display: block; margin: 0 auto;"
             />
           </div>
